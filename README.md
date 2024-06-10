@@ -1,4 +1,4 @@
-# Cineo# Cineo
+# Cineo
 
 AWS CLI
 
