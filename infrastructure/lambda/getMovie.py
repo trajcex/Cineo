@@ -1,16 +1,32 @@
 import boto3
 import os
+import base64
 
 def handler(event, context):
-    bucket_name = os.environ['BUCKET_NAME']
+    try:
+        bucket_name = os.environ['BUCKET_NAME']
 
-    object_key = event['queryStringParameters']['file']
+        file_name = event['queryStringParameters']['file']
 
-    s3 = boto3.client('s3')
+        s3 = boto3.client('s3')
+
+        
+        response = s3.get_object(Bucket=bucket_name, Key= file_name)
+        video_content = response['Body'].read()
+        video_content = base64.b64encode(video_content).decode()
+
+        return {
+            'statusCode': 200,
+            'headers': {
+                    'Content-Type': 'video/mp4',
+                },
+                'body': video_content,
+                'isBase64Encoded': True
+            }
     
-    url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': object_key})
-    
-    return {
-        'statusCode': 200,
-        'body': url
-    }
+    except Exception as e:
+        print('Error Messaaage', e)
+        return {
+            'statusCode': 500,
+            'body': f'Failed to load video from S3 bucket. {str(e)}'
+        }
