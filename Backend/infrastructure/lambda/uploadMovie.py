@@ -9,25 +9,30 @@ dynamodb = boto3.resource('dynamodb')
 
 def handler(event, context):
     try:
+
+        body = event['body']
+        body = base64.b64decode(body)
+        body = json.loads(body)
+
         bucket_name = os.environ['BUCKET_NAME']
         table_name = os.environ['TABLE_NAME']
         
         
-        file_content = base64.b64decode(event['body']['video_data'])
-        file_name = event['body']['file_name']
+        file_content = base64.b64decode(body['video_data'])
+        file_name = body['file_name']
         
         s3.put_object(Bucket=bucket_name, Key=file_name, Body=file_content)
 
 
-        file_type = event['body'].get('file_type', 'unknown')
+        file_type = body.get('file_type', 'unknown')
         file_size = int(len(file_content) // 4 * 3 // 1024)
         
 
-        title = event['body'].get('title', '')
-        description = event['body'].get('description', '')
-        actors = event['body'].get('actors', [])
-        directors = event['body'].get('directors', [])
-        genres = event['body'].get('genres', [])
+        title = body.get('title', '')
+        description = body.get('description', '')
+        actors = body.get('actors', [])
+        directors = body.get('directors', [])
+        genres = body.get('genres', [])
         
         metadata = {
             'fileName': file_name,
@@ -50,7 +55,7 @@ def handler(event, context):
             'body': 'Video uploaded to S3 bucket successfully!'
         }
     except Exception as e:
-        print('Error', e)
+        print('Error Messaaage', e)
         return {
             'statusCode': 500,
             'body': f'Failed to upload video to S3 bucket. {str(e)}'
