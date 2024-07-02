@@ -36,7 +36,14 @@ export class CognitoStack extends cdk.Stack {
             autoVerify: { email: true },
             signInCaseSensitive: false,
         });
-
+        const adminGroup = new cognito.CfnUserPoolGroup(this, "AdminGroup", {
+            userPoolId: pool.userPoolId,
+            groupName: "admin",
+        });
+        const guestGroup = new cognito.CfnUserPoolGroup(this, "GuestGroup", {
+            userPoolId: pool.userPoolId,
+            groupName: "guest",
+        });
         const client = pool.addClient("app-client", {
             supportedIdentityProviders: [
                 cognito.UserPoolClientIdentityProvider.COGNITO,
