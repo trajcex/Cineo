@@ -7,6 +7,7 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { Amplify } from 'aws-amplify';
 import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
 import { environment } from 'src/env/env';
+import { HttpClientModule } from '@angular/common/http';
 
 Amplify.configure({
   Auth: {
@@ -24,6 +25,7 @@ Amplify.configure({
     AppRoutingModule,
     AuthModule,
     AmplifyAuthenticatorModule,
+    HttpClientModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
