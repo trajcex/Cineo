@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { AuthServiceService } from 'src/app/service/auth-service.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-log-in',
@@ -32,4 +33,21 @@ export class LogInComponent {
       },
     },
   };
+
+  // constructor(private http: HttpClient) {}
+
+  // ngOnInit(): void {
+  //   this.http
+  //     .get<string>(
+  //       'https://dcsrszwen6.execute-api.eu-central-1.amazonaws.com/prod/download?file=neki.mp4'
+  //     )
+  //     .subscribe({
+  //       next: (result) => {
+  //         console.log(result);
+  //       },
+  //       error: (result) => {
+  //         console.log(result);
+  //       },
+  //     });
+  // }
 }
