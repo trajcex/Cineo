@@ -17,37 +17,38 @@ export class InfrastructureStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: InfrastructureStackProps) {
         super(scope, id, props);
 
-        const uploadMovie = new lambda.Function(this, "PutMovie", {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: "uploadMovie.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
-        });
+        // const uploadMovie = new lambda.Function(this, "PutMovie", {
+        //     runtime: lambda.Runtime.PYTHON_3_9,
+        //     handler: "uploadMovie.handler",
+        //     code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        //     timeout: cdk.Duration.seconds(30),
+        // });
 
-        const getMovie = new lambda.Function(this, "GetMovie", {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: "getMovie.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
-        });
-        const downloadMovie = new lambda.Function(this, "DownloadMovie", {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: "downloadMovie.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
-        });
+        // const getMovie = new lambda.Function(this, "GetMovie", {
+        //     runtime: lambda.Runtime.PYTHON_3_9,
+        //     handler: "getMovie.handler",
+        //     code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        //     timeout: cdk.Duration.seconds(30),
+        // });
+        // const downloadMovie = new lambda.Function(this, "DownloadMovie", {
+        //     runtime: lambda.Runtime.PYTHON_3_9,
+        //     handler: "downloadMovie.handler",
+        //     code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        //     timeout: cdk.Duration.seconds(30),
+        // });
         const getMovieUrl = new lambda.Function(this, "GetMovieUrl", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getMovieUrl.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
-        const getPostUrl = new lambda.Function(this, "GetPostUrl", {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: "getPostUrl.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
-        });
+        // const getPostUrl = new lambda.Function(this, "GetPostUrl", {
+        //     runtime: lambda.Runtime.PYTHON_3_9,
+        //     handler: "getPostUrl.handler",
+        //     code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        //     timeout: cdk.Duration.seconds(30),
+        // });
+
         // const movieBucket = new s3.Bucket(this, "Movie", {
         //     removalPolicy: cdk.RemovalPolicy.DESTROY,
         //     publicReadAccess: true,
@@ -87,49 +88,78 @@ export class InfrastructureStack extends cdk.Stack {
             ],
         });
 
-        uploadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        getMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        getPostUrl.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
+        // uploadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
+        // getMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
+        // getPostUrl.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
         getMovieUrl.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        downloadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
+        // downloadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
 
-        movieBucket.grantPut(uploadMovie);
-        movieBucket.grantPut(getPostUrl);
-        movieBucket.grantRead(getMovie);
+        // movieBucket.grantPut(uploadMovie);
+        // movieBucket.grantPut(getPostUrl);
+        // movieBucket.grantRead(getMovie);
         movieBucket.grantRead(getMovieUrl);
-        movieBucket.grantRead(downloadMovie);
+        // movieBucket.grantRead(downloadMovie);
         movieBucket.grantPublicAccess();
 
-        this.api = new apigateway.RestApi(this, "CineoApi", {
-            restApiName: "Video Service",
-            binaryMediaTypes: ["*/*"],
-        });
-
-        const uploadResource = this.api.root.addResource("upload");
-        const uploadIntegration = new apigateway.LambdaIntegration(uploadMovie);
-        uploadResource.addMethod("POST", uploadIntegration);
-
-        const downloadResource = this.api.root.addResource("download");
-        const downloadIntegration = new apigateway.LambdaIntegration(getMovie);
-        downloadResource.addMethod("GET", downloadIntegration);
-
-        const getPostPresignedUrl = this.api.root.addResource("getPostUrl");
-        const preSignedUrlIntegration = new apigateway.LambdaIntegration(
-            getPostUrl
+        const authorizerLayer = new lambda.LayerVersion(
+            this,
+            "AuthorizerLayer",
+            {
+                code: lambda.Code.fromAsset(
+                    path.join(__dirname, "../layer", "python.zip")
+                ),
+                compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+            }
         );
-        getPostPresignedUrl.addMethod("GET", preSignedUrlIntegration);
+        this.api = new apigateway.RestApi(this, "CineoApi", {
+            restApiName: "Video Service Trajce",
+            binaryMediaTypes: ["*/*"],
+            defaultCorsPreflightOptions: {
+                allowOrigins: apigateway.Cors.ALL_ORIGINS,
+                allowMethods: apigateway.Cors.ALL_METHODS,
+                allowHeaders: ["Authorization", "Content-Type"],
+                allowCredentials: true,
+                exposeHeaders: ["*"],
+            },
+        });
+        const authLambda = new lambda.Function(this, "AuthLambda", {
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            handler: "auth.handler",
+            runtime: lambda.Runtime.PYTHON_3_12,
+            layers: [authorizerLayer],
+        });
+        const authorizer = new apigateway.TokenAuthorizer(
+            this,
+            "awesome-api-authorizer",
+            { handler: authLambda }
+        );
+        // const uploadResource = this.api.root.addResource("upload");
+        // const uploadIntegration = new apigateway.LambdaIntegration(uploadMovie);
+        // uploadResource.addMethod("POST", uploadIntegration);
+
+        // const downloadResource = this.api.root.addResource("download");
+        // const downloadIntegration = new apigateway.LambdaIntegration(getMovie);
+        // downloadResource.addMethod("GET", downloadIntegration);
+
+        // const getPostPresignedUrl = this.api.root.addResource("getPostUrl");
+        // const preSignedUrlIntegration = new apigateway.LambdaIntegration(
+        //     getPostUrl
+        // );
+        // getPostPresignedUrl.addMethod("GET", preSignedUrlIntegration);
 
         const getMoviePresignedUrl = this.api.root.addResource("getMovieUrl");
         const preSignedMovieUrlIntegration = new apigateway.LambdaIntegration(
             getMovieUrl
         );
-        getMoviePresignedUrl.addMethod("GET", preSignedMovieUrlIntegration);
+        getMoviePresignedUrl.addMethod("GET", preSignedMovieUrlIntegration, {
+            authorizer: authorizer,
+        });
 
-        const getMovieWatch = this.api.root.addResource("getUrl");
-        const getMovieWatchIntegration = new apigateway.LambdaIntegration(
-            getMovie
-        );
-        getMovieWatch.addMethod("GET", getMovieWatchIntegration);
+        // const getMovieWatch = this.api.root.addResource("getUrl");
+        // const getMovieWatchIntegration = new apigateway.LambdaIntegration(
+        //     getMovie
+        // );
+        // getMovieWatch.addMethod("GET", getMovieWatchIntegration);
 
         const table = new dynamodb.Table(this, props.dbName, {
             partitionKey: {
@@ -140,7 +170,7 @@ export class InfrastructureStack extends cdk.Stack {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
 
-        table.grantWriteData(uploadMovie);
-        uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        // table.grantWriteData(uploadMovie);
+        // uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
     }
 }

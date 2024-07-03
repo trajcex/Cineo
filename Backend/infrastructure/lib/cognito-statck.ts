@@ -83,20 +83,5 @@ export class CognitoStack extends cdk.Stack {
                 cognito.UserPoolClientIdentityProvider.COGNITO,
             ],
         });
-        const authLambda = new lambda.Function(this, "AuthLambda", {
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            handler: "auth.handler",
-            runtime: lambda.Runtime.PYTHON_3_9,
-        });
-        const authorizer = new apigateway.TokenAuthorizer(
-            this,
-            "awesome-api-authorizer",
-            {
-                handler: authLambda,
-                identitySource:
-                    apigateway.IdentitySource.header("authorization"),
-                resultsCacheTtl: cdk.Duration.seconds(0),
-            }
-        );
     }
 }
