@@ -1,6 +1,5 @@
 import os
 import json
-import jwt
 import boto3
 # from jwt import PyJWKClient
 
@@ -22,28 +21,28 @@ import boto3
 def handler(event, context):
     print(f"event => {json.dumps(event)}")
 
-    auth_token = event['headers'].get('authorization', '')
+    auth_token = event['authorizationToken']
 
     try:
         # decoded_jwt = verify_jwt(auth_token)
         print(auth_token)
 
-        # return {
-        #     'principalId': decoded_jwt['sub'],
-        #     'policyDocument': {
-        #         'Version': '2012-10-17',
-        #         'Statement': [
-        #             {
-        #                 'Action': 'execute-api:Invoke',
-        #                 'Effect': 'Allow',
-        #                 'Resource': event['methodArn'],
-        #             },
-        #         ],
-        #     },
-        #     'context': {
-        #         'user': decoded_jwt,
-        #     },
-        # }
+        return {
+            'principalId': "kkkkk",
+            'policyDocument': {
+                'Version': '2012-10-17',
+                'Statement': [
+                    {
+                        'Action': 'execute-api:Invoke',
+                        'Effect': 'Allow',
+                        'Resource': event['methodArn'],
+                    },
+                ],
+            },
+            'context': {
+                'user': "trajce",
+            },
+        }
     except Exception as e:
         print(f"Token verification failed: {e}")
 
