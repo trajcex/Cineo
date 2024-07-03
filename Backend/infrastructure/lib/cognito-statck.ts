@@ -5,9 +5,13 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import path = require("path");
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as cr from "aws-cdk-lib/custom-resources";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
+interface CognitoStackProps extends cdk.StackProps {
+    api: apigateway.RestApi;
+}
 export class CognitoStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    constructor(scope: Construct, id: string, props: CognitoStackProps) {
         super(scope, id, props);
 
         const pool = new cognito.UserPool(this, "Pool", {
@@ -79,5 +83,20 @@ export class CognitoStack extends cdk.Stack {
                 cognito.UserPoolClientIdentityProvider.COGNITO,
             ],
         });
+        const authLambda = new lambda.Function(this, "AuthLambda", {
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            handler: "auth.handler",
+            runtime: lambda.Runtime.PYTHON_3_9,
+        });
+        const authorizer = new apigateway.TokenAuthorizer(
+            this,
+            "awesome-api-authorizer",
+            {
+                handler: authLambda,
+                identitySource:
+                    apigateway.IdentitySource.header("authorization"),
+                resultsCacheTtl: cdk.Duration.seconds(0),
+            }
+        );
     }
 }

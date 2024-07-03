@@ -6,8 +6,15 @@ import * as path from "path";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
+interface InfrastructureStackProps extends cdk.StackProps {
+    bucketName: string;
+    bucketID: string;
+    dbName: string;
+}
+
 export class InfrastructureStack extends cdk.Stack {
-    constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+    public readonly api: apigateway.RestApi;
+    constructor(scope: Construct, id: string, props: InfrastructureStackProps) {
         super(scope, id, props);
 
         const uploadMovie = new lambda.Function(this, "PutMovie", {
@@ -22,7 +29,7 @@ export class InfrastructureStack extends cdk.Stack {
             handler: "getMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
         });
-        const movieBucket = new s3.Bucket(this, "Movie", {
+        const movieBucket = new s3.Bucket(this, props.bucketID, {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             publicReadAccess: true,
             blockPublicAccess: {
@@ -31,7 +38,7 @@ export class InfrastructureStack extends cdk.Stack {
                 ignorePublicAcls: false,
                 restrictPublicBuckets: false,
             },
-            bucketName: "cineo-movie-bucket",
+            bucketName: props.bucketName,
             versioned: true,
             cors: [
                 {
@@ -48,20 +55,20 @@ export class InfrastructureStack extends cdk.Stack {
         movieBucket.grantRead(getMovie);
         movieBucket.grantPublicAccess();
 
-        const api = new apigateway.RestApi(this, "CineoApi", {
+        this.api = new apigateway.RestApi(this, "CineoApi", {
             restApiName: "Video Service",
             binaryMediaTypes: ["*/*"],
         });
 
-        const uploadResource = api.root.addResource("upload");
+        const uploadResource = this.api.root.addResource("upload");
         const uploadIntegration = new apigateway.LambdaIntegration(uploadMovie);
         uploadResource.addMethod("POST", uploadIntegration);
 
-        const downloadResource = api.root.addResource("download");
+        const downloadResource = this.api.root.addResource("download");
         const downloadIntegration = new apigateway.LambdaIntegration(getMovie);
         downloadResource.addMethod("GET", downloadIntegration);
 
-        const table = new dynamodb.Table(this, "MoviesTable", {
+        const table = new dynamodb.Table(this, props.dbName, {
             partitionKey: {
                 name: "fileName",
                 type: dynamodb.AttributeType.STRING,
