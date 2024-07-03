@@ -41,6 +41,12 @@ export class InfrastructureStack extends cdk.Stack {
           code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
           timeout: cdk.Duration.seconds(30),
       });
+      const deleteMovie = new lambda.Function(this, "DeleteMovie", {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        handler: "deleteMovie.handler",
+        code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        timeout: cdk.Duration.seconds(30),
+      });
         // const movieBucket = new s3.Bucket(this, "Movie", {
         //     removalPolicy: cdk.RemovalPolicy.DESTROY,
         //     publicReadAccess: true,
@@ -86,12 +92,14 @@ export class InfrastructureStack extends cdk.Stack {
         getPostUrl.addEnvironment("BUCKET_NAME",movieBucket.bucketName);
         getMovieUrl.addEnvironment("BUCKET_NAME",movieBucket.bucketName);
         downloadMovie.addEnvironment("BUCKET_NAME",movieBucket.bucketName);
-        
+        deleteMovie.addEnvironment("BUCKET_NAME",movieBucket.bucketName);
+
         movieBucket.grantPut(uploadMovie);
         movieBucket.grantPut(getPostUrl);
         movieBucket.grantRead(getMovie);
         movieBucket.grantRead(getMovieUrl);
         movieBucket.grantRead(downloadMovie);
+        movieBucket.grantDelete(deleteMovie);
         movieBucket.grantPublicAccess();
 
         const api = new apigateway.RestApi(this, "CineoApi", {
@@ -119,6 +127,10 @@ export class InfrastructureStack extends cdk.Stack {
         const getMovieWatchIntegration = new apigateway.LambdaIntegration(getMovie);
         getMovieWatch.addMethod("GET", getMovieWatchIntegration);
 
+        const deleteMovieData = api.root.addResource("deleteMovie");
+        const deleteMovieDataIntegration = new apigateway.LambdaIntegration(deleteMovie);
+        deleteMovieData.addMethod("DELETE", deleteMovieDataIntegration);
+
         const table = new dynamodb.Table(this, "MoviesTable", {
             partitionKey: {
                 name: "fileName",
@@ -129,6 +141,10 @@ export class InfrastructureStack extends cdk.Stack {
         });
 
         table.grantWriteData(uploadMovie);
+        table.grantFullAccess(deleteMovie);
+        
         uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
+
     }
 }

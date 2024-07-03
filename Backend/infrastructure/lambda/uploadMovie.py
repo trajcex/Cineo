@@ -21,13 +21,15 @@ def handler(event, context):
         file_content = base64.b64decode(body['video_data'])
         file_name = body['file_name']
         
-        s3.put_object(Bucket=bucket_name, Key=file_name, Body=file_content)
+        resolution = body.get('resolution', '') + ".mp4"
+        s3_object_path = f"{file_name}/{resolution}"
+        
+        s3.put_object(Bucket=bucket_name, Key=s3_object_path, Body=file_content)
 
 
         file_type = body.get('file_type', 'unknown')
         file_size = int(len(file_content) // 4 * 3 // 1024)
         
-
         title = body.get('title', '')
         description = body.get('description', '')
         actors = body.get('actors', [])
