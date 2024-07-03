@@ -1,6 +1,10 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as cognito from "aws-cdk-lib/aws-cognito";
+import * as lambda from "aws-cdk-lib/aws-lambda";
+import path = require("path");
+import * as iam from "aws-cdk-lib/aws-iam";
+import * as cr from "aws-cdk-lib/custom-resources";
 
 export class CognitoStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -44,6 +48,32 @@ export class CognitoStack extends cdk.Stack {
             userPoolId: pool.userPoolId,
             groupName: "guest",
         });
+
+        const postConfirmationLambda = new lambda.Function(
+            this,
+            "PostConfirmationLambda",
+            {
+                runtime: lambda.Runtime.PYTHON_3_9,
+                handler: "post-confirmation.handler",
+                code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            }
+        );
+
+        pool.addTrigger(
+            cognito.UserPoolOperation.POST_CONFIRMATION,
+            postConfirmationLambda
+        );
+
+        postConfirmationLambda.role?.attachInlinePolicy(
+            new iam.Policy(this, "userpool-policy", {
+                statements: [
+                    new iam.PolicyStatement({
+                        actions: ["cognito-idp:AdminAddUserToGroup"],
+                        resources: [pool.userPoolArn],
+                    }),
+                ],
+            })
+        );
         const client = pool.addClient("app-client", {
             supportedIdentityProviders: [
                 cognito.UserPoolClientIdentityProvider.COGNITO,
