@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { AuthServiceService } from 'src/app/service/auth-service.service';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from 'src/env/env';
 
 @Component({
   selector: 'app-log-in',
@@ -39,7 +40,9 @@ export class LogInComponent {
   ngOnInit(): void {
     this.http
       .get<string>(
-        'https://sfwxc6aw16.execute-api.eu-central-1.amazonaws.com/getMovieUrl?file=144.mp4'
+        'https://' +
+          environment.apiID +
+          '.execute-api.eu-central-1.amazonaws.com/getMovieUrl?file=144.mp4'
       )
       .subscribe({
         next: (result) => {
