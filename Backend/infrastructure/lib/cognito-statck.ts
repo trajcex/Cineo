@@ -11,6 +11,8 @@ interface CognitoStackProps extends cdk.StackProps {
     // api: apigateway.RestApi;
 }
 export class CognitoStack extends cdk.Stack {
+    public readonly userPoolID: string;
+    public readonly clientID: string;
     constructor(scope: Construct, id: string, props: CognitoStackProps) {
         super(scope, id, props);
 
@@ -83,5 +85,8 @@ export class CognitoStack extends cdk.Stack {
                 cognito.UserPoolClientIdentityProvider.COGNITO,
             ],
         });
+
+        this.userPoolID = pool.userPoolId;
+        this.clientID = client.userPoolClientId;
     }
 }
