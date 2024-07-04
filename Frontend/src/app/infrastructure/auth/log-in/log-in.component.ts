@@ -38,19 +38,6 @@ export class LogInComponent {
   constructor(private http: HttpClient, private auth: AuthServiceService) {}
 
   ngOnInit(): void {
-    this.http
-      .get<string>(
-        'https://' +
-          environment.apiID +
-          '.execute-api.eu-central-1.amazonaws.com/getMovieUrl?file=144.mp4'
-      )
-      .subscribe({
-        next: (result) => {
-          console.log(result);
-        },
-        error: (result) => {
-          console.log(result);
-        },
-      });
+    console.log(this.auth.getCurrentRole());
   }
 }
