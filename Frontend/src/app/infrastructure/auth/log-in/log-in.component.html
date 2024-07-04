@@ -8,6 +8,7 @@
     let-user="user"
     let-signOut="signOut"
   >
+    <app-nav-bar [signOut]="signOut"></app-nav-bar>
     <h1>Welcome {{ user.username }}!</h1>
     <button (click)="signOut()">Sign Out</button>
   </ng-template>
