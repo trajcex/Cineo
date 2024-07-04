@@ -16,19 +16,20 @@ interface InfrastructureStackProps extends cdk.StackProps {
     dbName: string;
     userPoolID: string;
     clientID: string;
+    movieBucket: s3.Bucket
 }
 
 export class InfrastructureStack extends cdk.Stack {
     public readonly api: apigatewayv2.HttpApi;
-
+    public readonly uploadMovie: lambda.Function;
     constructor(scope: Construct, id: string, props: InfrastructureStackProps) {
         super(scope, id, props);
 
-        const uploadMovie = new lambda.Function(this, "PutMovie", {
+        this.uploadMovie = new lambda.Function(this, "PutMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "uploadMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
+            timeout: cdk.Duration.seconds(300),
         });
 
         const getMovie = new lambda.Function(this, "GetMovie", {
@@ -50,59 +51,68 @@ export class InfrastructureStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
         const getPostUrl = new lambda.Function(this, "GetPostUrl", {
-            runtime: lambda.Runtime.PYTHON_3_9,
-            handler: "getPostUrl.handler",
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            timeout: cdk.Duration.seconds(30),
-        });
+          runtime: lambda.Runtime.PYTHON_3_9,
+          handler: "getPostUrl.handler",
+          code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+          timeout: cdk.Duration.seconds(30),
+      });
+      const deleteMovie = new lambda.Function(this, "DeleteMovie", {
+        runtime: lambda.Runtime.PYTHON_3_9,
+        handler: "deleteMovie.handler",
+        code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        timeout: cdk.Duration.seconds(30),
+      });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             environment: {
-                TABLE_NAME: props.dbName, // Assuming props.dbName is the DynamoDB table name
+                TABLE_NAME: props.dbName, 
             },
             timeout: cdk.Duration.seconds(30),
         });
 
-        const movieBucket = new s3.Bucket(this, props.bucketID, {
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-            publicReadAccess: true,
-            blockPublicAccess: {
-                blockPublicPolicy: false,
-                blockPublicAcls: false,
-                ignorePublicAcls: false,
-                restrictPublicBuckets: false,
-            },
-            bucketName: props.bucketName,
-            versioned: true,
-            cors: [
-                {
-                    allowedOrigins: ["*"],
-                    allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST],
-                    allowedHeaders: ["*"],
-                },
-            ],
-        });
+        // this.bucketName = props.bucketName;
+        
+        // const movieBucket = new s3.Bucket(this, props.bucketID, {
+        //     removalPolicy: cdk.RemovalPolicy.DESTROY,
+        //     publicReadAccess: true,
+        //     blockPublicAccess: {
+        //         blockPublicPolicy: false,
+        //         blockPublicAcls: false,
+        //         ignorePublicAcls: false,
+        //         restrictPublicBuckets: false,
+        //     },
+        //     bucketName: props.bucketName,
+        //     versioned: true,
+        //     cors: [
+        //         {
+        //             allowedOrigins: ["*"],
+        //             allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST],
+        //             allowedHeaders: ["*"],
+        //         },
+        //     ],
+        // });
 
-        uploadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        getMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        getPostUrl.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        getMovieUrl.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
-        downloadMovie.addEnvironment("BUCKET_NAME", movieBucket.bucketName);
+        this.uploadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getPostUrl.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
+        getMovieUrl.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
+        downloadMovie.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
+        deleteMovie.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
 
-        movieBucket.grantPut(uploadMovie);
-        movieBucket.grantPut(getPostUrl);
-        movieBucket.grantRead(getMovie);
-        movieBucket.grantRead(getMovieUrl);
-        movieBucket.grantRead(downloadMovie);
-        movieBucket.grantPublicAccess();
+        props.movieBucket.grantPut(this.uploadMovie);
+        props.movieBucket.grantPut(getPostUrl);
+        props.movieBucket.grantRead(getMovie);
+        props.movieBucket.grantRead(getMovieUrl);
+        props.movieBucket.grantRead(downloadMovie);
+        props.movieBucket.grantDelete(deleteMovie);
+        props.movieBucket.grantPublicAccess();
 
         const authorizerLayer = new lambda.LayerVersion(this, "AuthorizerLayer", {
             code: lambda.Code.fromAsset(path.join(__dirname, "../layer", "authorizer.zip")),
             compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
         });
-
         const authLambda = new lambda.Function(this, "AuthLambda", {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             handler: "auth.handler",
@@ -138,12 +148,14 @@ export class InfrastructureStack extends cdk.Stack {
             },
         });
 
-        const uploadIntegration = new HttpLambdaIntegration("UploadMovie", uploadMovie);
+        const uploadIntegration = new HttpLambdaIntegration("UploadMovie", this.uploadMovie);
         const downloadIntegration = new HttpLambdaIntegration("DownloadMovie", downloadMovie);
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
+        const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
+
 
         this.api.addRoutes({
             path: "/upload",
@@ -183,8 +195,15 @@ export class InfrastructureStack extends cdk.Stack {
             integration: searchIntegration,
             authorizer: httpAuthorizer,
         });
+        this.api.addRoutes({
+            path: "/delete",
+            methods: [apigatewayv2.HttpMethod.DELETE],
+            integration: deleteMovieIntegration,
+            authorizer: httpAuthorizer,
+        });
 
-        const table = new dynamodb.Table(this, props.dbName, {
+
+        const table = new dynamodb.Table(this, "MoviesTable", {
             partitionKey: {
                 name: "fileName",
                 type: dynamodb.AttributeType.STRING,
@@ -192,6 +211,12 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
+
+        table.grantWriteData(this.uploadMovie);
+        table.grantFullAccess(deleteMovie);
+        
+        this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
 
         table.addGlobalSecondaryIndex({
             indexName: "GSI1",
@@ -229,9 +254,9 @@ export class InfrastructureStack extends cdk.Stack {
         });
 
         table.grantFullAccess(searchMovies);
-        table.grantWriteData(uploadMovie);
+        table.grantWriteData(this.uploadMovie);
 
-        uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
     }
 }

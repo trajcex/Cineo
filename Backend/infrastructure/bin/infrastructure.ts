@@ -3,23 +3,40 @@ import "source-map-support/register";
 import * as cdk from "aws-cdk-lib";
 import { InfrastructureStack } from "../lib/infrastructure-stack";
 import { CognitoStack } from "../lib/cognito-statck";
+import { ContentTranscoderStack } from "../lib/contentTranscoder-stack";
+import { DataStack } from "../lib/data-stack";
 
 const app = new cdk.App();
 
-// new InfrastructureStack(app, "InfrastructureStack", {
-//     bucketName: "cineo-bucket-maric",
-//     dbName: "DBNAME",
-//     bucketID: "Bucket",
-// });
-
+const dataStack = new DataStack(app, "DataStack", {
+    bucketName: "cineo-bucket-maric",
+    bucketID: "Bucket",
+});
 const cognito = new CognitoStack(app, "CognitoStack", {});
 
-new InfrastructureStack(app, "InfrastructureStackTrajce", {
-    bucketID: "BucketTrajce",
-    dbName: "DBNAMETrajce",
-    bucketName: "cineo-bucket-trajce",
+const infrastractureStackMaric =  new InfrastructureStack(app, "InfrastractureStackMaric", {
+    bucketName: "cineo-bucket-maric",
+    dbName: "DBNAME",
+    bucketID: "Bucket",
+    movieBucket: dataStack.movieBucket,
     userPoolID: cognito.userPoolID,
     clientID: cognito.clientID,
 });
+
+new ContentTranscoderStack(app, "ContentTranscoderStack", {
+    uploadMovie: infrastractureStackMaric.uploadMovie,
+    bucketName: dataStack.bucketName,
+    movieBucket: dataStack.movieBucket
+});
+
+const infrastractureStackTrajce = new InfrastructureStack(app, "InfrastructureStackTrajce", {
+    bucketName: "cineo-bucket-trajce",
+    dbName: "DBNAMETrajce",
+    bucketID: "BucketTrajce",
+    movieBucket: dataStack.movieBucket,
+    userPoolID: cognito.userPoolID,
+    clientID: cognito.clientID,
+});
+
 
 app.synth();
