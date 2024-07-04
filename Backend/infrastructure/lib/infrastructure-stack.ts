@@ -5,6 +5,9 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as path from "path";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
+import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
+import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -13,7 +16,8 @@ interface InfrastructureStackProps extends cdk.StackProps {
 }
 
 export class InfrastructureStack extends cdk.Stack {
-    public readonly api: apigateway.RestApi;
+    public readonly api: apigatewayv2.HttpApi;
+
     constructor(scope: Construct, id: string, props: InfrastructureStackProps) {
         super(scope, id, props);
 
@@ -106,33 +110,44 @@ export class InfrastructureStack extends cdk.Stack {
             "AuthorizerLayer",
             {
                 code: lambda.Code.fromAsset(
-                    path.join(__dirname, "../layer", "python.zip")
+                    path.join(__dirname, "../layer", "authorizer.zip")
                 ),
-                compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+                compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
             }
         );
-        this.api = new apigateway.RestApi(this, "CineoApi", {
-            restApiName: "Video Service Trajce",
-            binaryMediaTypes: ["*/*"],
-            defaultCorsPreflightOptions: {
-                allowOrigins: apigateway.Cors.ALL_ORIGINS,
-                allowMethods: apigateway.Cors.ALL_METHODS,
-                allowHeaders: ["Authorization", "Content-Type"],
+
+        const authLambda = new lambda.Function(this, "AuthLambda", {
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            handler: "au.handler",
+            runtime: lambda.Runtime.NODEJS_18_X,
+            layers: [authorizerLayer],
+        });
+        const httpAuthorizer = new lambdaAuthorizers.HttpLambdaAuthorizer(
+            "HttpLambdaAuthorizer",
+            authLambda,
+            {
+                responseTypes: [
+                    lambdaAuthorizers.HttpLambdaResponseType.SIMPLE,
+                ],
+            }
+        );
+
+        this.api = new apigatewayv2.HttpApi(this, "MoviesApi", {
+            apiName: "MoviesApi",
+            corsPreflight: {
+                allowMethods: [
+                    apigatewayv2.CorsHttpMethod.GET,
+                    apigatewayv2.CorsHttpMethod.DELETE,
+                    apigatewayv2.CorsHttpMethod.PUT,
+                    apigatewayv2.CorsHttpMethod.POST,
+                    apigatewayv2.CorsHttpMethod.OPTIONS,
+                ],
+                allowOrigins: ["http://localhost:4200"],
+                allowHeaders: ["Content-Type", "Authorization"],
                 allowCredentials: true,
                 exposeHeaders: ["*"],
             },
         });
-        const authLambda = new lambda.Function(this, "AuthLambda", {
-            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            handler: "auth.handler",
-            runtime: lambda.Runtime.PYTHON_3_12,
-            layers: [authorizerLayer],
-        });
-        const authorizer = new apigateway.TokenAuthorizer(
-            this,
-            "awesome-api-authorizer",
-            { handler: authLambda }
-        );
         // const uploadResource = this.api.root.addResource("upload");
         // const uploadIntegration = new apigateway.LambdaIntegration(uploadMovie);
         // uploadResource.addMethod("POST", uploadIntegration);
@@ -146,13 +161,15 @@ export class InfrastructureStack extends cdk.Stack {
         //     getPostUrl
         // );
         // getPostPresignedUrl.addMethod("GET", preSignedUrlIntegration);
-
-        const getMoviePresignedUrl = this.api.root.addResource("getMovieUrl");
-        const preSignedMovieUrlIntegration = new apigateway.LambdaIntegration(
+        const preSignedMovieUrlIntegration = new HttpLambdaIntegration(
+            "GetMovieUrl",
             getMovieUrl
         );
-        getMoviePresignedUrl.addMethod("GET", preSignedMovieUrlIntegration, {
-            authorizer: authorizer,
+        this.api.addRoutes({
+            path: "/getMovieUrl",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: preSignedMovieUrlIntegration,
+            authorizer: httpAuthorizer,
         });
 
         // const getMovieWatch = this.api.root.addResource("getUrl");

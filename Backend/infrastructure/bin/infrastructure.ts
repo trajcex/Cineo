@@ -18,8 +18,6 @@ const nesto = new InfrastructureStack(app, "InfrastructureStackTrajce", {
     bucketName: "cineo-bucket-trajce",
 });
 
-new CognitoStack(app, "CognitoStack", {
-    api: nesto.api,
-});
+new CognitoStack(app, "CognitoStack", {});
 
 app.synth();

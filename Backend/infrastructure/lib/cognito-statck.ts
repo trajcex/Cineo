@@ -8,7 +8,7 @@ import * as cr from "aws-cdk-lib/custom-resources";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
 interface CognitoStackProps extends cdk.StackProps {
-    api: apigateway.RestApi;
+    // api: apigateway.RestApi;
 }
 export class CognitoStack extends cdk.Stack {
     constructor(scope: Construct, id: string, props: CognitoStackProps) {
