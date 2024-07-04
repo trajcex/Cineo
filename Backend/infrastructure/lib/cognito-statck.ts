@@ -88,15 +88,15 @@ export class CognitoStack extends cdk.Stack {
             handler: "auth.handler",
             runtime: lambda.Runtime.PYTHON_3_9,
         });
-        const authorizer = new apigateway.TokenAuthorizer(
-            this,
-            "awesome-api-authorizer",
-            {
-                handler: authLambda,
-                identitySource:
-                    apigateway.IdentitySource.header("authorization"),
-                resultsCacheTtl: cdk.Duration.seconds(0),
-            }
-        );
+        // const authorizer = new apigateway.TokenAuthorizer(
+        //     this,
+        //     "awesome-api-authorizer",
+        //     {
+        //         handler: authLambda,
+        //         identitySource:
+        //             apigateway.IdentitySource.header("authorization"),
+        //         resultsCacheTtl: cdk.Duration.seconds(0),
+        //     }
+        // );
     }
 }
