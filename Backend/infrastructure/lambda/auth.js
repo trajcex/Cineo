@@ -3,8 +3,10 @@ const { CognitoJwtVerifier } = require("aws-jwt-verify");
 // Konfiguracija grupa i ruta
 const mapGroupsToPaths = [
     { path: "GET /getMovieUrl", group: "admin" },
-    { path: "GET /preview-url", group: "BasicUser" },
-    { path: "GET /download-url", group: "BasicUser" },
+    { path: "GET /getPostUrl", group: "admin" },
+    { path: "POST /upload", group: "admin" },
+    { path: "GET /preview-url", group: "admin" },
+    { path: "GET /download", group: "admin" },
 ];
 
 function generatePolicy(principalId) {
