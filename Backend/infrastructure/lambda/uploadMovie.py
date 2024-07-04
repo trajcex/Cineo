@@ -30,9 +30,10 @@ def handler(event, context):
 
         title = body.get('title', '')
         description = body.get('description', '')
-        actors = body.get('actors', [])
-        directors = body.get('directors', [])
-        genres = body.get('genres', [])
+        actors = parse_list_or_string(body.get('actors', []))
+        directors = parse_list_or_string(body.get('directors', []))
+        genres = parse_list_or_string(body.get('genres', []))
+
         
         metadata = {
             'fileName': file_name,
@@ -60,3 +61,9 @@ def handler(event, context):
             'statusCode': 500,
             'body': f'Failed to upload video to S3 bucket. {str(e)}'
         }
+    
+def parse_list_or_string(value):
+    if isinstance(value, list):
+        return ', '.join(value)
+    elif isinstance(value, str):
+        return value
