@@ -7,6 +7,8 @@ import { AuthModule } from './infrastructure/auth/auth.module';
 import { Amplify } from 'aws-amplify';
 import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
 import { environment } from 'src/env/env';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { Interceptor } from './infrastructure/auth/interceptor';
 
 Amplify.configure({
   Auth: {
@@ -24,8 +26,15 @@ Amplify.configure({
     AppRoutingModule,
     AuthModule,
     AmplifyAuthenticatorModule,
+    HttpClientModule,
   ],
-  providers: [],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: Interceptor,
+      multi: true,
+    },
+  ],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
