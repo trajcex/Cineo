@@ -6,3 +6,7 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+# Include .js files in the lambda directory
+!lambda/
+!lambda/**/*.js
