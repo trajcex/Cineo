@@ -6,14 +6,16 @@ import {
   HttpInterceptor,
 } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { AuthServiceService } from 'src/app/service/auth-service.service';
 
 @Injectable()
 export class Interceptor implements HttpInterceptor {
+  constructor(private auth: AuthServiceService) {}
   intercept(
     req: HttpRequest<any>,
     next: HttpHandler
   ): Observable<HttpEvent<any>> {
-    const accessToken: any = getAccessTokenFromLocalStorage();
+    const accessToken: any = this.auth.getAccessTokenFromLocalStorage();
     if (req.headers.get('skip')) return next.handle(req);
 
     if (accessToken) {
@@ -26,14 +28,4 @@ export class Interceptor implements HttpInterceptor {
       return next.handle(req);
     }
   }
-}
-
-function getAccessTokenFromLocalStorage() {
-  for (let i = 0; i < localStorage.length; i++) {
-    let key = localStorage.key(i);
-    if (key?.includes('accessToken')) {
-      return localStorage.getItem(key);
-    }
-  }
-  return null;
 }

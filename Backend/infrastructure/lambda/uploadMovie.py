@@ -12,7 +12,6 @@ def handler(event, context):
     try:
 
         body = event['body']
-        body = base64.b64decode(body)
         body = json.loads(body)
 
         bucket_name = os.environ['BUCKET_NAME']
