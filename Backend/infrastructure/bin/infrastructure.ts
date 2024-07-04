@@ -7,7 +7,7 @@ import { CognitoStack } from "../lib/cognito-statck";
 const app = new cdk.App();
 
 new InfrastructureStack(app, "InfrastructureStack", {
-    bucketName: "cineo-bucket-maric",
+    bucketName: "cineo-bucket-stefan",
     dbName: "DBNAME",
     bucketID: "Bucket",
 });
