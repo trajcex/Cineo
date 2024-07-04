@@ -55,20 +55,13 @@ export class CognitoStack extends cdk.Stack {
             groupName: "guest",
         });
 
-        const postConfirmationLambda = new lambda.Function(
-            this,
-            "PostConfirmationLambda",
-            {
-                runtime: lambda.Runtime.PYTHON_3_9,
-                handler: "post-confirmation.handler",
-                code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-            }
-        );
+        const postConfirmationLambda = new lambda.Function(this, "PostConfirmationLambda", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "post-confirmation.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+        });
 
-        pool.addTrigger(
-            cognito.UserPoolOperation.POST_CONFIRMATION,
-            postConfirmationLambda
-        );
+        pool.addTrigger(cognito.UserPoolOperation.POST_CONFIRMATION, postConfirmationLambda);
 
         postConfirmationLambda.role?.attachInlinePolicy(
             new iam.Policy(this, "userpool-policy", {
@@ -81,9 +74,7 @@ export class CognitoStack extends cdk.Stack {
             })
         );
         const client = pool.addClient("app-client", {
-            supportedIdentityProviders: [
-                cognito.UserPoolClientIdentityProvider.COGNITO,
-            ],
+            supportedIdentityProviders: [cognito.UserPoolClientIdentityProvider.COGNITO],
         });
 
         this.userPoolID = pool.userPoolId;

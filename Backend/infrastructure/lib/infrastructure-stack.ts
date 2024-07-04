@@ -8,6 +8,7 @@ import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
+import * as iam from "aws-cdk-lib/aws-iam";
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -52,6 +53,15 @@ export class InfrastructureStack extends cdk.Stack {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getPostUrl.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const searchMovies = new lambda.Function(this, "SearchMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "searchMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            environment: {
+                TABLE_NAME: props.dbName, // Assuming props.dbName is the DynamoDB table name
+            },
             timeout: cdk.Duration.seconds(30),
         });
 
@@ -133,6 +143,7 @@ export class InfrastructureStack extends cdk.Stack {
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
+        const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
 
         this.api.addRoutes({
             path: "/upload",
@@ -166,6 +177,13 @@ export class InfrastructureStack extends cdk.Stack {
             authorizer: httpAuthorizer,
         });
 
+        this.api.addRoutes({
+            path: "/search",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: searchIntegration,
+            authorizer: httpAuthorizer,
+        });
+
         const table = new dynamodb.Table(this, props.dbName, {
             partitionKey: {
                 name: "fileName",
@@ -175,7 +193,45 @@ export class InfrastructureStack extends cdk.Stack {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
 
+        table.addGlobalSecondaryIndex({
+            indexName: "GSI1",
+            partitionKey: { name: "title", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "createdAt", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        table.addGlobalSecondaryIndex({
+            indexName: "GSI2",
+            partitionKey: { name: "actors", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        table.addGlobalSecondaryIndex({
+            indexName: "GSI3",
+            partitionKey: { name: "directors", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        table.addGlobalSecondaryIndex({
+            indexName: "GSI4",
+            partitionKey: { name: "genres", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        table.addGlobalSecondaryIndex({
+            indexName: "GSI5",
+            partitionKey: { name: "description", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
+            projectionType: dynamodb.ProjectionType.ALL,
+        });
+
+        table.grantFullAccess(searchMovies);
         table.grantWriteData(uploadMovie);
+
         uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        searchMovies.addEnvironment("TABLE_NAME", table.tableName);
     }
 }
