@@ -67,7 +67,7 @@ export class InfrastructureStack extends cdk.Stack {
             handler: "searchMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             environment: {
-                TABLE_NAME: props.dbName, // Assuming props.dbName is the DynamoDB table name
+                TABLE_NAME: props.dbName, 
             },
             timeout: cdk.Duration.seconds(30),
         });
