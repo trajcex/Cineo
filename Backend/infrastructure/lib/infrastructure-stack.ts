@@ -9,6 +9,7 @@ import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as iam from "aws-cdk-lib/aws-iam";
+import { subscribe } from "diagnostics_channel";
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -16,7 +17,7 @@ interface InfrastructureStackProps extends cdk.StackProps {
     dbName: string;
     userPoolID: string;
     clientID: string;
-    movieBucket: s3.Bucket
+    movieBucket: s3.Bucket;
 }
 
 export class InfrastructureStack extends cdk.Stack {
@@ -51,61 +52,53 @@ export class InfrastructureStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
         const getPostUrl = new lambda.Function(this, "GetPostUrl", {
-          runtime: lambda.Runtime.PYTHON_3_9,
-          handler: "getPostUrl.handler",
-          code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-          timeout: cdk.Duration.seconds(30),
-      });
-      const deleteMovie = new lambda.Function(this, "DeleteMovie", {
-        runtime: lambda.Runtime.PYTHON_3_9,
-        handler: "deleteMovie.handler",
-        code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
-        timeout: cdk.Duration.seconds(30),
-      });
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getPostUrl.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const deleteMovie = new lambda.Function(this, "DeleteMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "deleteMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const subscribeTopic = new lambda.Function(this, "SubscribeTopic", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "subscribeTopic.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const getSubcription = new lambda.Function(this, "GetSubcriptionTopic", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getSubscription.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             environment: {
-                TABLE_NAME: props.dbName, 
+                TABLE_NAME: props.dbName,
             },
             timeout: cdk.Duration.seconds(30),
         });
 
-        // this.bucketName = props.bucketName;
-        
-        // const movieBucket = new s3.Bucket(this, props.bucketID, {
-        //     removalPolicy: cdk.RemovalPolicy.DESTROY,
-        //     publicReadAccess: true,
-        //     blockPublicAccess: {
-        //         blockPublicPolicy: false,
-        //         blockPublicAcls: false,
-        //         ignorePublicAcls: false,
-        //         restrictPublicBuckets: false,
-        //     },
-        //     bucketName: props.bucketName,
-        //     versioned: true,
-        //     cors: [
-        //         {
-        //             allowedOrigins: ["*"],
-        //             allowedMethods: [s3.HttpMethods.GET, s3.HttpMethods.POST],
-        //             allowedHeaders: ["*"],
-        //         },
-        //     ],
-        // });
-
         this.uploadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
-        getPostUrl.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
-        getMovieUrl.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
-        downloadMovie.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
-        deleteMovie.addEnvironment("BUCKET_NAME",props.movieBucket.bucketName);
+        getPostUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getMovieUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        downloadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        deleteMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        subscribeTopic.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
         props.movieBucket.grantPut(this.uploadMovie);
         props.movieBucket.grantPut(getPostUrl);
         props.movieBucket.grantRead(getMovie);
         props.movieBucket.grantRead(getMovieUrl);
         props.movieBucket.grantRead(downloadMovie);
+        props.movieBucket.grantRead(subscribeTopic);
         props.movieBucket.grantDelete(deleteMovie);
         props.movieBucket.grantPublicAccess();
 
@@ -155,7 +148,8 @@ export class InfrastructureStack extends cdk.Stack {
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
-
+        const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
+        const getSubscriptionIntegration = new HttpLambdaIntegration("Subscribe", getSubcription);
 
         this.api.addRoutes({
             path: "/upload",
@@ -201,8 +195,18 @@ export class InfrastructureStack extends cdk.Stack {
             integration: deleteMovieIntegration,
             authorizer: httpAuthorizer,
         });
-
-
+        this.api.addRoutes({
+            path: "/subscribe",
+            methods: [apigatewayv2.HttpMethod.PUT],
+            integration: subscribeTopicIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/getSubscription",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getSubscriptionIntegration,
+            authorizer: httpAuthorizer,
+        });
         const table = new dynamodb.Table(this, "MoviesTable", {
             partitionKey: {
                 name: "fileName",
@@ -214,7 +218,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         table.grantWriteData(this.uploadMovie);
         table.grantFullAccess(deleteMovie);
-        
+
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
 
@@ -258,5 +262,17 @@ export class InfrastructureStack extends cdk.Stack {
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
+
+        const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {
+            partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "email", type: dynamodb.AttributeType.STRING },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+
+        subscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+        getSubcription.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+        tableSubscribeTopic.grantReadWriteData(subscribeTopic);
+        tableSubscribeTopic.grantReadData(getSubcription);
     }
 }
