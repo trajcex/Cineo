@@ -13,10 +13,10 @@ import {Subscriber} from "rxjs";
 import {SubscriptionsModule} from "./subscriptions/subscriptions.module";
 import {MovieModule} from "./movie/movie.module";
 import {MoviesPageModule} from "./movies-page/movies-page.module";
-import {NotificationsModule} from "./notifications/notifications.module";
 import {LayoutModule} from "./layout/layout.module";
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MaterialModule} from "./infrastructure/material/material.module";
+import {NgxDropzoneModule} from "ngx-dropzone";
 
 Amplify.configure({
   Auth: {
@@ -38,10 +38,10 @@ Amplify.configure({
     MovieModule,
     MoviesPageModule,
     LayoutModule,
-    NotificationsModule,
     SubscriptionsModule,
     BrowserAnimationsModule,
-    MaterialModule
+    MaterialModule,
+    NgxDropzoneModule
   ],
   providers: [
     {

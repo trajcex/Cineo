@@ -4,13 +4,13 @@ import {AllMoviesComponent} from "./movies-page/all-movies/all-movies.component"
 import {AddMovieComponent} from "./movie/add-movie/add-movie.component";
 import {ViewMovieComponent} from "./movie/view-movie/view-movie.component";
 import {LogInComponent} from "./infrastructure/auth/log-in/log-in.component";
+import {AuthGuard} from "./infrastructure/auth/auth.guard";
 
 const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  {path: "login", component: LogInComponent},
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
   {path : "home", component : AllMoviesComponent},
-  {path : "add-movie", component : AddMovieComponent},
-  {path : "view-movie", component : ViewMovieComponent},
+  {path : "add-movie", component : AddMovieComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
+  {path : "view-movie", component : ViewMovieComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
 ];
 
 @NgModule({
