@@ -12,7 +12,7 @@ def handler(event, context):
 
         body = event['body']
         table_name = os.environ['TABLE_NAME']
-        topic_name = body['topic']
+        topic_name = body['topic'].replace(" ","")+"Topic"
         
         try:
             topics = sns.list_topics()['Topics']
@@ -42,8 +42,10 @@ def handler(event, context):
             )
             print(f"Subscribed {body['email']} to topic {topic_name}")
         except Exception as e:
-            print(f"Error subscribing to topic: {e}")
-            raise e
+            raise {
+                'statusCode': 500,
+                'body': f'Error subscribing to topic: {str(e)}'
+            }
         
         table = dynamodb.Table(table_name)
         item = get_existing_item(body['userID'],table)

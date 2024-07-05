@@ -97,6 +97,17 @@ export class InfrastructureStack extends cdk.Stack {
                 resources: ["*"],
             })
         );
+        unsubscribeTopic.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: [
+                    "sns:CreateTopic",
+                    "sns:ListTopics",
+                    "SNS:Unsubscribe",
+                    "sns:ListSubscriptionsByTopic",
+                ],
+                resources: ["*"],
+            })
+        );
 
         this.uploadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
