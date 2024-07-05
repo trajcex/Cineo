@@ -5,12 +5,45 @@ import os
 from boto3.dynamodb.conditions import Key, Attr
 
 dynamodb = boto3.resource('dynamodb')
+sns = boto3.client('sns')
 
 def handler(event, context):
     try:
 
         body = event['body']
         table_name = os.environ['TABLE_NAME']
+        topic_name = body['topic']
+        
+        try:
+            topics = sns.list_topics()['Topics']
+            topic = next((t for t in topics if t['TopicArn'].endswith(f':{topic_name}')), None)
+            topic_arn = topic['TopicArn'] if topic else None
+        except Exception as e:
+            return {
+            'statusCode': 500,
+            'body': f'Error listing topics: {str(e)}'
+            }
+        
+        if not topic_arn:
+            try:
+                create_topic_response = sns.create_topic(Name=topic_name)
+                topic_arn = create_topic_response['TopicArn']
+            except Exception as e:
+                return {
+                    'statusCode': 500,
+                    'body': f'Error creating topic: {str(e)}'
+                }
+        
+        try:
+            sns.subscribe(
+                TopicArn=topic_arn,
+                Protocol='email',
+                Endpoint=body['email']
+            )
+            print(f"Subscribed {body['email']} to topic {topic_name}")
+        except Exception as e:
+            print(f"Error subscribing to topic: {e}")
+            raise e
         
         table = dynamodb.Table(table_name)
         item = get_existing_item(body['userID'],table)

@@ -91,6 +91,13 @@ export class InfrastructureStack extends cdk.Stack {
             timeout: cdk.Duration.seconds(30),
         });
 
+        subscribeTopic.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ["sns:CreateTopic", "sns:ListTopics", "SNS:Subscribe"],
+                resources: ["*"],
+            })
+        );
+
         this.uploadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getPostUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
@@ -156,7 +163,7 @@ export class InfrastructureStack extends cdk.Stack {
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
-            "UnSubscribe",
+            "Unsubscribe",
             unsubscribeTopic
         );
         const getSubscriptionIntegration = new HttpLambdaIntegration(
