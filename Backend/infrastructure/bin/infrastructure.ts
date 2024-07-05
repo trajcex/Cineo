@@ -12,21 +12,26 @@ const dataStack = new DataStack(app, "DataStack", {
     bucketName: "cineo-bucket-maric",
     bucketID: "Bucket",
 });
+
+const dataStackMaric = new DataStack(app, "DataStackMaric", {
+    bucketName: "cineo-bucket-maric",
+    bucketID: "Bucket",
+});
 const cognito = new CognitoStack(app, "CognitoStack", {});
 
 const infrastractureStackMaric =  new InfrastructureStack(app, "InfrastractureStackMaric", {
     bucketName: "cineo-bucket-maric",
     dbName: "DBNAME",
     bucketID: "Bucket",
-    movieBucket: dataStack.movieBucket,
+    movieBucket: dataStackMaric.movieBucket,
     userPoolID: cognito.userPoolID,
     clientID: cognito.clientID,
 });
 
 new ContentTranscoderStack(app, "ContentTranscoderStack", {
     uploadMovie: infrastractureStackMaric.uploadMovie,
-    bucketName: dataStack.bucketName,
-    movieBucket: dataStack.movieBucket
+    bucketName: dataStackMaric.bucketName,
+    movieBucket: dataStackMaric.movieBucket,
 });
 
 const infrastractureStackTrajce = new InfrastructureStack(app, "InfrastructureStackTrajce", {

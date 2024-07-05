@@ -7,10 +7,14 @@ def handler(event, context):
         bucket_name = os.environ['BUCKET_NAME']
 
         file_name = event['queryStringParameters']['file']
+        resolution = event['queryStringParameters']['resolution']
+        movie_id = event['queryStringParameters']['id']
+
+        s3_object_path =  str(movie_id) + "-" +  f"{file_name}/{resolution}" + ".mp4"
 
         s3 = boto3.client('s3')
         
-        response = s3.get_object(Bucket=bucket_name, Key= file_name)
+        response = s3.get_object(Bucket=bucket_name, Key= s3_object_path)
         video_content = response['Body'].read()
         video_content = base64.b64encode(video_content).decode()
 
