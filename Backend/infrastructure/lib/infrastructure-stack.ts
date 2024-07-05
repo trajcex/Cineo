@@ -9,7 +9,7 @@ import * as apigatewayv2 from "aws-cdk-lib/aws-apigatewayv2";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as iam from "aws-cdk-lib/aws-iam";
-import { subscribe } from "diagnostics_channel";
+import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -78,6 +78,12 @@ export class InfrastructureStack extends cdk.Stack {
         const getSubcription = new lambda.Function(this, "GetSubcriptionTopic", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getSubscription.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const messageDispatcher = new lambda.Function(this, "MessageDispatcher", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "messageDispatcher.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
@@ -251,6 +257,7 @@ export class InfrastructureStack extends cdk.Stack {
             },
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            stream: dynamodb.StreamViewType.NEW_IMAGE,
         });
 
         table.grantWriteData(this.uploadMovie);
@@ -296,6 +303,16 @@ export class InfrastructureStack extends cdk.Stack {
 
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
+        table.grantStreamRead(messageDispatcher);
+
+        messageDispatcher.addEventSource(
+            new eventsources.DynamoEventSource(table, {
+                startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+                batchSize: 5,
+                bisectBatchOnError: true,
+                retryAttempts: 10,
+            })
+        );
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
@@ -310,6 +327,8 @@ export class InfrastructureStack extends cdk.Stack {
         subscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         unsubscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         getSubcription.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+        messageDispatcher.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+        tableSubscribeTopic.grantReadData(messageDispatcher);
         tableSubscribeTopic.grantReadWriteData(subscribeTopic);
         tableSubscribeTopic.grantReadWriteData(unsubscribeTopic);
         tableSubscribeTopic.grantReadData(getSubcription);
