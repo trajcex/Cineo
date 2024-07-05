@@ -1,1 +1,16 @@
-
+<div class="main-container">
+  <div class="main">
+    <div class="header">
+      <h1 class="title">Movies</h1>
+      <h2 *ngIf="role != 'admin'" class="subtitle">My Content</h2>
+      <h2 *ngIf="role == 'admin'" class="subtitle">All Content</h2>
+    </div>
+    <div class="movie-grid">
+      <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/view-movie']">
+        <div class="movie-image">
+          <img [src]="movie.imageUrl" alt="{{movie.title}}">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
