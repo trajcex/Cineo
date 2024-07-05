@@ -9,6 +9,14 @@ import { AmplifyAuthenticatorModule } from '@aws-amplify/ui-angular';
 import { environment } from 'src/env/env';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { Interceptor } from './infrastructure/auth/interceptor';
+import {Subscriber} from "rxjs";
+import {SubscriptionsModule} from "./subscriptions/subscriptions.module";
+import {MovieModule} from "./movie/movie.module";
+import {MoviesPageModule} from "./movies-page/movies-page.module";
+import {LayoutModule} from "./layout/layout.module";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import {MaterialModule} from "./infrastructure/material/material.module";
+import {NgxDropzoneModule} from "ngx-dropzone";
 
 Amplify.configure({
   Auth: {
@@ -27,6 +35,13 @@ Amplify.configure({
     AuthModule,
     AmplifyAuthenticatorModule,
     HttpClientModule,
+    MovieModule,
+    MoviesPageModule,
+    LayoutModule,
+    SubscriptionsModule,
+    BrowserAnimationsModule,
+    MaterialModule,
+    NgxDropzoneModule
   ],
   providers: [
     {
