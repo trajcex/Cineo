@@ -1,0 +1,12 @@
+<mat-toolbar>
+  <img [routerLink]="['/home']" src="../../../assets/images/logo-no-background.svg" alt="image">
+  <div>
+    <div class="nav-bar-container">
+      <a [routerLink]="['/home']">HOME</a>
+      <a *ngIf="role == 'admin'" [routerLink]="['/add-movie']">ADD MOVIE</a>
+      <a *ngIf="role != 'admin'" [routerLink]="['/add-movie']">SUBSCRIPTIONS</a>
+    </div>
+    <a (click)="onLogout()">LOGOUT</a>
+  </div>
+</mat-toolbar>
+

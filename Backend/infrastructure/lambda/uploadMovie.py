@@ -3,10 +3,13 @@ import boto3
 import os
 import base64
 from datetime import datetime
+import uuid
+import io
+import imghdr
 
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
-stepfunctions = boto3.client('stepfunctions')
+sqs = boto3.client('sqs')
 
 def handler(event, context):
     try:
@@ -16,17 +19,22 @@ def handler(event, context):
 
         bucket_name = os.environ['BUCKET_NAME']
         table_name = os.environ['TABLE_NAME']
-        step_function_arn = os.environ['STEP_FUNCTION_ARN']
-        
-        
+        queue_url = os.environ['QUEUE_URL']
+
         file_content = base64.b64decode(body['video_data'])
+        thumbnail = base64.b64decode(body['thumbnail'])
+
         file_name = body['file_name']
+        movie_id = uuid.uuid4()
         
         resolution = body.get('resolution', '')
-        s3_object_path = f"{file_name}/{resolution}" + ".mp4"
-        
-        s3.put_object(Bucket=bucket_name, Key=s3_object_path, Body=file_content)
 
+        s3_folder_path =  str(movie_id) + "-" +  f"{file_name}/"
+        s3_object_path_video =  s3_folder_path +  f"{resolution}" + ".mp4"
+        s3_object_path_photo =  s3_folder_path + "thumbnail" + get_image_format(thumbnail)
+
+        s3.put_object(Bucket=bucket_name, Key=s3_object_path_video, Body=file_content)
+        s3.put_object(Bucket=bucket_name, Key=s3_object_path_photo, Body=thumbnail)    
 
         file_type = body.get('file_type', 'unknown')
         file_size = int(len(file_content) // 4 * 3 // 1024)
@@ -39,6 +47,7 @@ def handler(event, context):
 
         
         metadata = {
+            'id': str(movie_id),
             'fileName': file_name,
             'fileType': file_type,
             'fileSize': file_size,
@@ -56,27 +65,21 @@ def handler(event, context):
 
 
         resolutions = ['144','360','480','720']
+            
         resolutions.remove(resolution)
 
         input_data = [{
+            'id': str(movie_id),
             'fileName': file_name,
-            'fileType': file_type,
-            'fileSize': file_size,
-            'title': title,
-            'description': description,
-            'actors': actors,
-            'directors': directors,
-            'genres': genres,
             'resolution': res,
             'resolutionBase': resolution
         } for res in resolutions]
-        
-        stepfunctions.start_execution(
-            stateMachineArn=step_function_arn,
-            input=json.dumps({'inputForMap': input_data})
+
+        sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps({'inputForMap': input_data})
         )
 
-        
         return {
             'statusCode': 200,
             'body': 'Video uploaded to S3 bucket successfully!'
@@ -93,3 +96,8 @@ def parse_list_or_string(value):
         return ', '.join(value)
     elif isinstance(value, str):
         return value
+    
+def get_image_format(image_data):
+    image_stream = io.BytesIO(image_data)
+    image_format = imghdr.what(image_stream)
+    return str(image_format)

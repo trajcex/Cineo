@@ -12,18 +12,12 @@ def handler(event, context):
 
 
     file_name = event.get('fileName')
-    file_type = event.get('fileType')
-    file_size = event.get('fileSize')
-    title = event.get('title')
-    description = event.get('description')
-    actors = event.get('actors', [])
-    directors = event.get('directors', [])
-    genres = event.get('genres', [])
+    movie_id = event.get('id')
     resolution = event.get('resolution', "")
     resolutionBase = event.get('resolutionBase','')
     
     input_file_path = f'/tmp/{os.path.basename(resolutionBase)}' + '.mp4'
-    input_key = file_name + "/" + resolutionBase + ".mp4"
+    input_key = movie_id + "-" + file_name + "/" + resolutionBase + ".mp4"
     output_file_path = f'/tmp/resized_{os.path.basename(resolution)}' + '.mp4'
 
     resolution_map = {
@@ -44,18 +38,11 @@ def handler(event, context):
             output_file_path
     ]
     
-    result = subprocess.run(command, capture_output=True, text=True)
+    subprocess.run(command, capture_output=True, text=True)
     
-    resized_video_path = file_name + "/" + resolution + ".mp4"
+    resized_video_path = movie_id + "-" +  f"{file_name}/{resolution}" + ".mp4"
     
     s3.upload_file(output_file_path, bucket_name, resized_video_path)
-
-    # response = s3.get_object(Bucket=bucket_name, Key= get_object_path)
-
-    # video_content = response['Body'].read()
-
-    # s3_object_path = f"{file_name}/{resolution}" + ".mp4"
-    # s3.put_object(Bucket=bucket_name, Key=s3_object_path, Body=video_content)
 
 
     return {
