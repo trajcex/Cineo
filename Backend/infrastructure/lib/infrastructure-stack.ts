@@ -107,6 +107,7 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantRead(getMovieUrl);
         props.movieBucket.grantRead(downloadMovie);
         props.movieBucket.grantDelete(deleteMovie);
+        props.movieBucket.grantRead(deleteMovie);
         props.movieBucket.grantPublicAccess();
 
         const authorizerLayer = new lambda.LayerVersion(this, "AuthorizerLayer", {
@@ -205,7 +206,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         const table = new dynamodb.Table(this, "MoviesTable", {
             partitionKey: {
-                name: "fileName",
+                name: "id",
                 type: dynamodb.AttributeType.STRING,
             },
             removalPolicy: cdk.RemovalPolicy.DESTROY,

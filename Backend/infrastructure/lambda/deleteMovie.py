@@ -7,19 +7,24 @@ def handler(event, context):
         table_name = os.environ['TABLE_NAME']
 
         file_name = event['queryStringParameters']['file']
-        resolution = event['queryStringParameters']['resolution'] + ".mp4"
-        s3_object_path = f"{file_name}/{resolution}"
+        movie_id = event['queryStringParameters']['id']
+
+        s3_object_path = str(movie_id) + "-" +  f"{file_name}"
 
         s3 = boto3.client('s3')
 
-        s3.delete_object(Bucket=bucket_name, Key=s3_object_path)
+        objects_to_delete = s3.list_objects_v2(Bucket=bucket_name, Prefix=s3_object_path)
+
+        if 'Contents' in objects_to_delete:
+            delete_keys = {'Objects': [{'Key': obj['Key']} for obj in objects_to_delete['Contents']]}
+            s3.delete_objects(Bucket=bucket_name, Delete=delete_keys)
 
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(table_name)
 
-        response = table.delete_item(
+        table.delete_item(
             Key={
-                'fileName': file_name  
+                'id':movie_id  
             }
         )
         return {
