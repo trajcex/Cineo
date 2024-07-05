@@ -1,0 +1,41 @@
+mat-toolbar {
+  background-color: #ffffff;
+  height: 60px;
+}
+
+div {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+button{
+  margin-right: 35px;
+  background-color: #235471 !important;
+  color: #ffffff !important;
+}
+a{
+  margin-right: 35px;
+  align-self: center;
+  text-decoration: none;
+  color: #000;
+  cursor: pointer;
+}
+
+img {
+  margin-left: 30px;
+  margin-top: 5px;
+  width: 90px;
+  height: 56px;
+  cursor: pointer;
+}
+
+.nav-bar-container{
+  display: flex;
+}
+
+mat-toolbar ::ng-deep a {
+  font-weight: normal;
+  text-decoration: none;
+  font-size: 16px;
+}

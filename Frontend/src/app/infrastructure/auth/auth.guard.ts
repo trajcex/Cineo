@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
     | boolean
     | UrlTree {
     const userRole: string = this.authService.getCurrentRole();
-
+    console.log(userRole);
     if (userRole == null) {
       this.router.navigate(['login']);
       return false;

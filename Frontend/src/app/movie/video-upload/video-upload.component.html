@@ -1,0 +1,18 @@
+<div class="container">
+  <div class="custom-dropzone" (click)="fileInput.click()" *ngIf="videoPreviews.length === 0">
+    <input #fileInput id="fileInput" type="file" (change)="onFileChange($event)" accept="video/*" style="display: none;">
+    <img src="assets/images/upload_video.svg" alt="Video" class="dropzone-icon">
+    <p>Click to select or drag and drop a video</p>
+  </div>
+  <h5>Video preview:</h5>
+  <div class="video-container">
+    <div *ngFor="let preview of videoPreviews; let i = index" class="video-preview">
+      <div class="video-preview-wrapper">
+        <video controls [src]="preview" width="300"></video>
+        <div class="delete-icon-container" (click)="deleteVideo(i)">
+          <mat-icon class="delete-icon">close</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
