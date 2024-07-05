@@ -1,4 +1,6 @@
 import {Component, Input} from '@angular/core';
+import {AuthServiceService} from "../../service/auth-service.service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-nav-bar',
@@ -7,13 +9,17 @@ import {Component, Input} from '@angular/core';
 })
 export class NavBarComponent {
 
-  @Input() signOut: (() => void) | undefined;
-
-  onLogout() {
-    if (this.signOut) {
-      this.signOut();
-    }
+  role: string = '';
+  constructor(private auth: AuthServiceService, private router: Router) {
   }
+  onLogout() {
+    this.auth.signOut();
+  }
+
+  ngOnInit(): void {
+    this.role = this.auth.getCurrentRole();
+  }
+
   // role: string = '';
   // constructor(private authService: AuthService, private router: Router) {
   // }

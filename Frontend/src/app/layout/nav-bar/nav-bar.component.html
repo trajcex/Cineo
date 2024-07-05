@@ -3,8 +3,8 @@
   <div>
     <div class="nav-bar-container">
       <a [routerLink]="['/home']">HOME</a>
-      <a >MY CONTENT</a>
-      <a [routerLink]="['/add-movie']">ADD MOVIE</a>
+      <a *ngIf="role == 'admin'" [routerLink]="['/add-movie']">ADD MOVIE</a>
+      <a *ngIf="role != 'admin'" [routerLink]="['/add-movie']">SUBSCRIPTIONS</a>
     </div>
     <a (click)="onLogout()">LOGOUT</a>
   </div>
