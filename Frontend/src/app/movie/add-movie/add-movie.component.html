@@ -67,30 +67,6 @@
           </mat-form-field>
 
           <mat-form-field class="example-chip-list">
-            <mat-label>Genres</mat-label>
-            <mat-chip-grid #chipGridGenres aria-label="Enter genres">
-              <mat-chip-row *ngFor="let genre of genres"
-                            (removed)="removeGenre(genre)"
-                            [editable]="true"
-                            (edited)="editGenre(genre, $event)"
-                            [aria-description]="'Press Enter to edit ' + genre">
-                {{ genre }}
-                <button matChipRemove [attr.aria-label]="'Remove ' + genre">
-                  <mat-icon>cancel</mat-icon>
-                </button>
-              </mat-chip-row>
-              <input placeholder="New genre..."
-                     [matChipInputFor]="chipGridGenres"
-                     [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                     [matChipInputAddOnBlur]="addOnBlur"
-                     (matChipInputTokenEnd)="addGenre($event)"/>
-            </mat-chip-grid>
-            <div *ngIf="formSubmitted && genres.length === 0" class="field-error">
-              At least one genre is required.
-            </div>
-          </mat-form-field>
-
-          <mat-form-field class="example-chip-list">
             <mat-label>Directors</mat-label>
             <mat-chip-grid #chipGridDirectors aria-label="Enter directors">
               <mat-chip-row *ngFor="let director of directors"
@@ -113,6 +89,17 @@
               At least one director is required.
             </div>
           </mat-form-field>
+
+          <mat-form-field class="example-chip-list">
+            <mat-label class="custom-label">Genres</mat-label>
+            <mat-select formControlName="genres" multiple required>
+              <mat-option *ngFor="let genre of predefinedGenres" [value]="genre">{{ genre }}</mat-option>
+            </mat-select>
+            <div *ngIf="formSubmitted && movie.get('genres')?.invalid" class="field-error">
+              At least one genre is required.
+            </div>
+          </mat-form-field>
+
 
           <div class="videoUpload">
             <app-video-upload (videoBase64String)="handleVideoBase64($event)"></app-video-upload>

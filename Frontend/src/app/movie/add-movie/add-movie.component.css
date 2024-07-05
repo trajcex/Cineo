@@ -160,3 +160,8 @@ button {
   color: red;
   font-size: 0.8em;
 }
+
+.custom-label {
+  color: inherit; /* Nasleđuje boju teksta od roditeljskog elementa */
+  /* Dodajte ostale stilove po potrebi */
+}

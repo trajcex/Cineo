@@ -18,12 +18,14 @@ export class AddMovieComponent {
 
   title = "Let's add a new movie!";
   addOnBlur = true;
-  readonly separatorKeysCodes = [13, 188];
+  readonly separatorKeysCodes = [ENTER, COMMA];
   actors: string[] = [];
   genres: string[] = [];
   directors: string[] = [];
   formSubmitted: boolean = false;
   videoBase64: string = '';
+
+  predefinedGenres: string[] = ['Action', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Thriller'];
 
   constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router) {}
 
@@ -58,35 +60,6 @@ export class AddMovieComponent {
     const index = this.actors.indexOf(actor);
     if (index >= 0) {
       this.actors[index] = value;
-    }
-  }
-
-  addGenre(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-    if (value) {
-      this.genres.push(value);
-    }
-    event.chipInput!.clear();
-  }
-
-  removeGenre(genre: string): void {
-    const index = this.genres.indexOf(genre);
-    if (index >= 0) {
-      this.genres.splice(index, 1);
-      this.announce(`Removed ${genre}`);
-    }
-  }
-
-  editGenre(genre: string, event: MatChipEditedEvent): void {
-    const value = (event.value || '').trim();
-    if (!value) {
-      this.removeGenre(genre);
-      return;
-    }
-
-    const index = this.genres.indexOf(genre);
-    if (index >= 0) {
-      this.genres[index] = value;
     }
   }
 
@@ -128,6 +101,7 @@ export class AddMovieComponent {
     fileName: ['', Validators.required],
     resolution: ['', Validators.required],
     description: ['', Validators.required],
+    genres: [[]] // Initialize genres as an empty array
   });
 
   trimValues() {
@@ -152,7 +126,8 @@ export class AddMovieComponent {
       return;
     }
 
-    if (this.actors.length === 0 || this.directors.length === 0 || this.genres.length === 0) {
+    // @ts-ignore
+    if (this.actors.length === 0 || this.directors.length === 0 || this.movie.value.genres.length === 0) {
       return;
     }
 
@@ -162,7 +137,7 @@ export class AddMovieComponent {
       description: this.movie.value.description,
       actors: this.actors,
       directors: this.directors,
-      genres: this.genres,
+      genres: this.movie.value.genres, // Use selected genres from form value
       resolution: this.movie.value.resolution,
       video_data: this.videoBase64,
     };
@@ -191,6 +166,4 @@ export class AddMovieComponent {
         },
       });
   }
-
-
 }
