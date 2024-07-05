@@ -69,6 +69,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const unsubscribeTopic = new lambda.Function(this, "UnsubscribeTopic", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "unsubscribeTopic.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const getSubcription = new lambda.Function(this, "GetSubcriptionTopic", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getSubscription.handler",
@@ -149,7 +155,14 @@ export class InfrastructureStack extends cdk.Stack {
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
-        const getSubscriptionIntegration = new HttpLambdaIntegration("Subscribe", getSubcription);
+        const unsubscribeTopicIntegration = new HttpLambdaIntegration(
+            "UnSubscribe",
+            unsubscribeTopic
+        );
+        const getSubscriptionIntegration = new HttpLambdaIntegration(
+            "GetSubscription",
+            getSubcription
+        );
 
         this.api.addRoutes({
             path: "/upload",
@@ -199,6 +212,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/subscribe",
             methods: [apigatewayv2.HttpMethod.PUT],
             integration: subscribeTopicIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/unsubscribe",
+            methods: [apigatewayv2.HttpMethod.DELETE],
+            integration: unsubscribeTopicIntegration,
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
@@ -271,8 +290,10 @@ export class InfrastructureStack extends cdk.Stack {
         });
 
         subscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+        unsubscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         getSubcription.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         tableSubscribeTopic.grantReadWriteData(subscribeTopic);
+        tableSubscribeTopic.grantReadWriteData(unsubscribeTopic);
         tableSubscribeTopic.grantReadData(getSubcription);
     }
 }
