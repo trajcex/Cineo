@@ -326,6 +326,8 @@ export class InfrastructureStack extends cdk.Stack {
 
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
+        table.grantReadData(getMovie);
+        table.grantReadData(getMovieUrl);
         table.grantStreamRead(messageDispatcher);
         table.grantReadData(getPossibleSubcription);
 
@@ -340,6 +342,8 @@ export class InfrastructureStack extends cdk.Stack {
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
+        getMovie.addEnvironment("TABLE_NAME", table.tableName);
+        getMovieUrl.addEnvironment("TABLE_NAME", table.tableName);
         getPossibleSubcription.addEnvironment("TABLE_NAME", table.tableName);
 
         const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {

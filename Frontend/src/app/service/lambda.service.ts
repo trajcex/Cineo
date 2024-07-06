@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpParams,
+  HttpResponse,
+} from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/env/env';
+import { Movie } from '../model/movieInfo';
 import { AuthServiceService } from './auth-service.service';
 @Injectable({
   providedIn: 'root',
@@ -27,6 +33,51 @@ export class LambdaService {
           return response.body;
         })
       );
+  }
+  getMovie(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/getMovie`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+
+  getMovieUrl(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/getMovieUrl`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+
+  downloadMovie(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/download`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+  deleteMovie(id: string, fileName: string): Observable<string> {
+    const url = this.url + `/delete`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '');
+    return this.http.delete<string>(url, { params });
   }
 
   public getPossibleSubscriptions(): Observable<any> {

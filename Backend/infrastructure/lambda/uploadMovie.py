@@ -31,10 +31,17 @@ def handler(event, context):
 
         s3_folder_path =  str(movie_id) + "-" +  f"{file_name}/"
         s3_object_path_video =  s3_folder_path +  f"{resolution}" + ".mp4"
-        s3_object_path_photo =  s3_folder_path + "thumbnail" + "." + get_image_format(thumbnail)
+        s3_object_path_photo =  s3_folder_path + "thumbnail." + get_image_format(thumbnail)
 
-        s3.put_object(Bucket=bucket_name, Key=s3_object_path_video, Body=file_content)
-        s3.put_object(Bucket=bucket_name, Key=s3_object_path_photo, Body=thumbnail)    
+        s3.put_object(
+            Bucket=bucket_name,
+            Key=s3_object_path_video, 
+            Body=file_content,
+            ContentType='video/mp4')
+        
+        s3.put_object(Bucket=bucket_name, 
+            Key=s3_object_path_photo, 
+            Body=thumbnail)    
 
         file_type = body.get('file_type', 'unknown')
         file_size = int(len(file_content) // 4 * 3 // 1024)
@@ -66,8 +73,6 @@ def handler(event, context):
 
         resolutions = ['144','360','480','720']
             
-        resolutions.remove(resolution)
-
         input_data = [{
             'id': str(movie_id),
             'fileName': file_name,
