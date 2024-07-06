@@ -1,6 +1,7 @@
 import boto3
 import os
 import base64
+import json
 
 def handler(event, context):
     try:
@@ -18,15 +19,17 @@ def handler(event, context):
             ClientMethod='get_object', 
             Params={
                 'Bucket': bucket_name,
-                'Key': s3_object_path
-                # 'ResponseContentDisposition': 'attachment'
+                'Key': s3_object_path,
+                'ResponseContentDisposition': 'attachment'
                 }
             )
         
         return {
             'statusCode': 200,
-            'body': url
-            }
+            'body': json.dumps({
+                'video_content':url
+            })
+        }
     
     except Exception as e:
         print('Error Messaaage', e)
