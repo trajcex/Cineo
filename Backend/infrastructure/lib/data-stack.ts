@@ -5,6 +5,9 @@ import * as lambda from "aws-cdk-lib/aws-lambda";
 import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import * as sfnTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
 import * as s3 from "aws-cdk-lib/aws-s3";
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+
 
 interface DataProps extends cdk.StackProps {
     bucketName: string;
@@ -37,5 +40,6 @@ export class DataStack extends cdk.Stack {
                 },
             ],
         });
+
     }
 }
