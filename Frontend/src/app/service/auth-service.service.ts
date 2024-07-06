@@ -61,6 +61,22 @@ export class AuthServiceService {
       return '';
     }
   }
+  public getEmail(): string {
+    try {
+      const decodedToken: any = decodeJWT(
+        this.getAccessTokenFromLocalStorage() || ''
+      );
+      const roles: string | undefined = decodedToken['payload']['username'];
+      if (roles && roles.length > 0) {
+        return roles;
+      } else {
+        return '';
+      }
+    } catch (error) {
+      console.error('Error decoding accessToken:', error);
+      return '';
+    }
+  }
   signOut() {
     signOut();
   }

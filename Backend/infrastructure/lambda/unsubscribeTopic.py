@@ -10,7 +10,7 @@ sns = boto3.client('sns')
 def handler(event, context):
     try:
 
-        body = event['body']
+        body = json.loads(event['body'])
         table_name = os.environ['TABLE_NAME']
         topic_name = body['topic'].replace(" ","")+"Topic"
         email = body['email']
