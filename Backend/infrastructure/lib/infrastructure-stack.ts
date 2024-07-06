@@ -81,6 +81,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getPossibleSubcription = new lambda.Function(this, "GetPossibleSubcription", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getPossibleSubscriptions.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const messageDispatcher = new lambda.Function(this, "MessageDispatcher", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "messageDispatcher.handler",
@@ -194,6 +200,10 @@ export class InfrastructureStack extends cdk.Stack {
             "GetSubscription",
             getSubcription
         );
+        const getPossibleSubcriptionIntegration = new HttpLambdaIntegration(
+            "GetPossibleSubcription",
+            getPossibleSubcription
+        );
 
         this.api.addRoutes({
             path: "/upload",
@@ -257,6 +267,12 @@ export class InfrastructureStack extends cdk.Stack {
             integration: getSubscriptionIntegration,
             authorizer: httpAuthorizer,
         });
+        this.api.addRoutes({
+            path: "/getPossibleSubcription",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getPossibleSubcriptionIntegration,
+            authorizer: httpAuthorizer,
+        });
         const table = new dynamodb.Table(this, "MoviesTable", {
             partitionKey: {
                 name: "id",
@@ -311,6 +327,7 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
         table.grantStreamRead(messageDispatcher);
+        table.grantReadData(getPossibleSubcription);
 
         messageDispatcher.addEventSource(
             new eventsources.DynamoEventSource(table, {
@@ -323,6 +340,7 @@ export class InfrastructureStack extends cdk.Stack {
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
+        getPossibleSubcription.addEnvironment("TABLE_NAME", table.tableName);
 
         const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {
             partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
