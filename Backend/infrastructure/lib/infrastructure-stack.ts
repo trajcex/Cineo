@@ -257,7 +257,7 @@ export class InfrastructureStack extends cdk.Stack {
         });
         this.api.addRoutes({
             path: "/unsubscribe",
-            methods: [apigatewayv2.HttpMethod.DELETE],
+            methods: [apigatewayv2.HttpMethod.POST],
             integration: unsubscribeTopicIntegration,
             authorizer: httpAuthorizer,
         });
