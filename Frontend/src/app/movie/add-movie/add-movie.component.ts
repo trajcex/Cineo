@@ -7,6 +7,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http
 import { environment } from "../../../env/env";
 import { Router } from "@angular/router";
 import { ImageUploadComponent } from "../image-upload/image-upload.component";
+import {LambdaService} from "../../service/lambda.service";
 
 @Component({
   selector: 'app-add-movie',
@@ -31,7 +32,7 @@ export class AddMovieComponent {
 
   predefinedGenres: string[] = ['Action', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Thriller'];
 
-  constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router) {}
+  constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router, private lambdaService: LambdaService) {}
 
   handleImageBase64(base64String: string) {
     console.log('Received Base64 image in parent component:', base64String);
@@ -145,34 +146,25 @@ export class AddMovieComponent {
       description: this.movie.value.description,
       actors: this.actors,
       directors: this.directors,
-      genres: this.movie.value.genres, // Use selected genres from form value
+      genres: this.movie.value.genres,
       resolution: this.movie.value.resolution,
       video_data: this.videoBase64,
-      // thumbnail: this.imageBase64String // Add image data to the body
+      thumbnail: this.receivedImageBase64
     };
 
     console.log('Submitting:', body);
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
+    this.lambdaService.postVideo(body).subscribe({
+      next: (result) => {
+        console.log('Upload result:', result);
+        this.router.navigate(["home"]);
+        this.formSubmitted = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Upload error:', error);
+        this.formSubmitted = false;
+      },
+    })
 
-    this.http
-      .post(
-        `https://${environment.apiID}.execute-api.eu-central-1.amazonaws.com/upload`,
-        body,
-        { headers, responseType: 'text' }
-      )
-      .subscribe({
-        next: (result) => {
-          console.log('Upload result:', result);
-          this.router.navigate(["home"]);
-          this.formSubmitted = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Upload error:', error);
-          this.formSubmitted = false;
-        },
-      });
   }
 }

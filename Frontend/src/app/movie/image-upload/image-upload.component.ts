@@ -41,7 +41,6 @@ export class ImageUploadComponent {
     reader.onload = () => {
       let base64String = reader.result as string;
       base64String = base64String.split(',')[1];
-      // Emit the Base64 string to the parent component
       this.imageBase64String.emit(base64String);
     };
 

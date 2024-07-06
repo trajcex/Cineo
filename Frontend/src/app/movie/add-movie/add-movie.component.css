@@ -15,15 +15,14 @@ body {
   background-color: #F6F8FA;
   max-width: 1300px;
   width: 100%;
-  padding: 20px; /* Dodatni padding unutar main kontejnera */
-  border-radius: 10px; /* Zaobljeni rubovi */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Senka za dimenziju */
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .card {
-  background-color: #F6F8FA; /* Sivkastija boja forme */
+  background-color: #F6F8FA;
   border-radius: 15px;
-  /* Uklanjanje box-shadow i margin-bottom */
   padding: 30px 50px;
 }
 
@@ -120,6 +119,5 @@ button {
 }
 
 .custom-label {
-  color: inherit; /* Nasleđuje boju teksta od roditeljskog elementa */
-  /* Dodajte ostale stilove po potrebi */
+  color: inherit;
 }

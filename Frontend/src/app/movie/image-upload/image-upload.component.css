@@ -33,12 +33,12 @@
 }
 
 .preview-image {
-  width: 200px; /* Adjust width as needed */
-  height: auto; /* Maintain aspect ratio */
+  width: 200px;
+  height: auto;
   border-radius: 15px;
   padding: 10px;
   margin-bottom: 10px;
-  object-fit: cover; /* Ensure the image covers the container */
+  object-fit: cover;
 }
 
 .delete-icon {
