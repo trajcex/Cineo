@@ -1,0 +1,16 @@
+<div class="container">
+  <ngx-dropzone class="custom-dropzone" (change)="onDrop($event)" *ngIf="files.length === 0">
+    <p class="dropzone-image">Click to select or drag and drop your thumbnail</p>
+  </ngx-dropzone>
+  <h5>Image preview:</h5>
+  <div class="image-container">
+    <div class="image" *ngIf="files.length > 0">
+      <div class="image-wrapper">
+        <img [src]="imagePreviews[0]" alt="Preview" class="preview-image">
+        <div class="delete-icon-container" (click)="deleteImage(0)">
+          <mat-icon class="delete-icon">close</mat-icon>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

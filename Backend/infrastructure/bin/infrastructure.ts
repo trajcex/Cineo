@@ -47,4 +47,23 @@ const infrastractureStackTrajce = new InfrastructureStack(app, "InfrastructureSt
     clientID: cognito.clientID,
 });
 
+const dataStackStefan= new DataStack(app, "DataStackStefan", {
+    bucketName: "cineo-bucket-stefan",
+    bucketID: "Bucket",
+});
+const infrastractureStackStefan = new InfrastructureStack(app, "InfrastractureStackStefan", {
+    bucketName: "cineo-bucket-stefan",
+    dbName: "DBNAME",
+    bucketID: "Bucket",
+    movieBucket: dataStackStefan.movieBucket,
+    userPoolID: cognito.userPoolID,
+    clientID: cognito.clientID,
+});
+
+new ContentTranscoderStack(app, "ContentTranscoderStackStefan", {
+    uploadMovie: infrastractureStackStefan.uploadMovie,
+    bucketName: dataStackStefan.bucketName,
+    movieBucket: dataStackStefan.movieBucket,
+});
+
 app.synth();
