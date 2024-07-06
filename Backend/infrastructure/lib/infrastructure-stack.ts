@@ -114,6 +114,12 @@ export class InfrastructureStack extends cdk.Stack {
                 resources: ["*"],
             })
         );
+        messageDispatcher.addToRolePolicy(
+            new iam.PolicyStatement({
+                actions: ["sns:ListTopics", "sns:Publish"],
+                resources: ["*"],
+            })
+        );
 
         this.uploadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
