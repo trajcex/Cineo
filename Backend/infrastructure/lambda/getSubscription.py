@@ -9,7 +9,7 @@ dynamodb = boto3.resource('dynamodb')
 def handler(event, context):
     try:
 
-        body = event['body']
+        body = event['queryStringParameters']
         table_name = os.environ['TABLE_NAME']
         
         table = dynamodb.Table(table_name)
