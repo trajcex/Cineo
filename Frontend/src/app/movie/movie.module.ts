@@ -10,6 +10,7 @@ import {MatIconModule} from "@angular/material/icon";
 import { VideoUploadComponent } from './video-upload/video-upload.component';
 import {NgxDropzoneModule} from "ngx-dropzone";
 import {MaterialModule} from "../infrastructure/material/material.module";
+import { ImageUploadComponent } from './image-upload/image-upload.component';
 
 
 
@@ -17,7 +18,8 @@ import {MaterialModule} from "../infrastructure/material/material.module";
   declarations: [
     AddMovieComponent,
     ViewMovieComponent,
-    VideoUploadComponent
+    VideoUploadComponent,
+    ImageUploadComponent
   ],
     imports: [
         CommonModule,
