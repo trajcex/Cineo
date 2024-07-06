@@ -256,8 +256,12 @@ export class InfrastructureStack extends cdk.Stack {
 
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
+        table.grantReadData(getMovie);
+        table.grantReadData(getMovieUrl);
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
+        getMovie.addEnvironment("TABLE_NAME", table.tableName);
+        getMovieUrl.addEnvironment("TABLE_NAME", table.tableName);
     }
 }
