@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {HttpClient, HttpHeaders, HttpParams, HttpResponse} from '@angular/common/http';
+import {map, Observable} from 'rxjs';
 import { environment } from 'src/env/env';
 import { Movie } from '../model/movieInfo';
 @Injectable({
@@ -13,7 +13,18 @@ export class LambdaService {
     'https://' + environment.apiID + '.execute-api.eu-central-1.amazonaws.com';
 
   public postVideo(body: any): Observable<string> {
-    return this.http.post<string>(this.url + '/upload', body);
+    // @ts-ignore
+    return this.http.post(this.url + '/upload', body, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      }),
+      responseType: 'text', // Postavite responseType na 'text' ovde
+      observe: 'response' // Opciono, ako želite pristup celom HttpResponse-u
+    }).pipe(
+      map((response: HttpResponse<string>) => {
+        return response.body;
+      })
+    );
   }
   getMovie(id: string, fileName: string, resolution: string): Observable<Movie> {
     const url = this.url + `/getMovie`;

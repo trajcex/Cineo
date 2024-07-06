@@ -1,11 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { LiveAnnouncer } from "@angular/cdk/a11y";
 import { MatChipInputEvent, MatChipEditedEvent } from "@angular/material/chips";
 import { COMMA, ENTER } from "@angular/cdk/keycodes";
-import {HttpClient, HttpErrorResponse, HttpHeaders} from "@angular/common/http";
-import {environment} from "../../../env/env";
-import {Router} from "@angular/router";
+import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
+import { environment } from "../../../env/env";
+import { Router } from "@angular/router";
+import { ImageUploadComponent } from "../image-upload/image-upload.component";
+import {LambdaService} from "../../service/lambda.service";
 
 @Component({
   selector: 'app-add-movie',
@@ -13,20 +15,29 @@ import {Router} from "@angular/router";
   styleUrls: ['./add-movie.component.css']
 })
 export class AddMovieComponent {
-
+  @ViewChild(ImageUploadComponent) childComponent!: ImageUploadComponent;
   fb = inject(FormBuilder);
 
   title = "Let's add a new movie!";
   addOnBlur = true;
-  readonly separatorKeysCodes = [13, 188];
+  readonly separatorKeysCodes = [ENTER, COMMA];
   actors: string[] = [];
   genres: string[] = [];
   directors: string[] = [];
   formSubmitted: boolean = false;
   videoBase64: string = '';
+  receivedImageBase64: string = '';
 
-  constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router) {}
+  picture: File[] = [];
 
+  predefinedGenres: string[] = ['Action', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Thriller'];
+
+  constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router, private lambdaService: LambdaService) {}
+
+  handleImageBase64(base64String: string) {
+    console.log('Received Base64 image in parent component:', base64String);
+    this.receivedImageBase64 = base64String;
+  }
   handleVideoBase64(base64String: string) {
     console.log('Received Base64 string in parent component:', base64String);
     this.videoBase64 = base64String;
@@ -58,35 +69,6 @@ export class AddMovieComponent {
     const index = this.actors.indexOf(actor);
     if (index >= 0) {
       this.actors[index] = value;
-    }
-  }
-
-  addGenre(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-    if (value) {
-      this.genres.push(value);
-    }
-    event.chipInput!.clear();
-  }
-
-  removeGenre(genre: string): void {
-    const index = this.genres.indexOf(genre);
-    if (index >= 0) {
-      this.genres.splice(index, 1);
-      this.announce(`Removed ${genre}`);
-    }
-  }
-
-  editGenre(genre: string, event: MatChipEditedEvent): void {
-    const value = (event.value || '').trim();
-    if (!value) {
-      this.removeGenre(genre);
-      return;
-    }
-
-    const index = this.genres.indexOf(genre);
-    if (index >= 0) {
-      this.genres[index] = value;
     }
   }
 
@@ -128,6 +110,7 @@ export class AddMovieComponent {
     fileName: ['', Validators.required],
     resolution: ['', Validators.required],
     description: ['', Validators.required],
+    genres: [[]] // Initialize genres as an empty array
   });
 
   trimValues() {
@@ -148,11 +131,12 @@ export class AddMovieComponent {
     this.formSubmitted = true;
     this.trimValues();
 
-    if (this.movie.invalid || this.videoBase64 === '') {
+    if (this.movie.invalid || this.videoBase64 === '' || this.receivedImageBase64 === '') {
       return;
     }
 
-    if (this.actors.length === 0 || this.directors.length === 0 || this.genres.length === 0) {
+    // @ts-ignore
+    if (this.actors.length === 0 || this.directors.length === 0 || this.movie.value.genres.length === 0) {
       return;
     }
 
@@ -162,35 +146,25 @@ export class AddMovieComponent {
       description: this.movie.value.description,
       actors: this.actors,
       directors: this.directors,
-      genres: this.genres,
+      genres: this.movie.value.genres,
       resolution: this.movie.value.resolution,
       video_data: this.videoBase64,
+      thumbnail: this.receivedImageBase64
     };
 
     console.log('Submitting:', body);
 
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-    });
+    this.lambdaService.postVideo(body).subscribe({
+      next: (result) => {
+        console.log('Upload result:', result);
+        this.router.navigate(["home"]);
+        this.formSubmitted = false;
+      },
+      error: (error: HttpErrorResponse) => {
+        console.error('Upload error:', error);
+        this.formSubmitted = false;
+      },
+    })
 
-    this.http
-      .post(
-        `https://${environment.apiID}.execute-api.eu-central-1.amazonaws.com/upload`,
-        body,
-        { headers, responseType: 'text' }
-      )
-      .subscribe({
-        next: (result) => {
-          console.log('Upload result:', result);
-          this.router.navigate(["home"]);
-          this.formSubmitted = false;
-        },
-        error: (error: HttpErrorResponse) => {
-          console.error('Upload error:', error);
-          this.formSubmitted = false;
-        },
-      });
   }
-
-
 }

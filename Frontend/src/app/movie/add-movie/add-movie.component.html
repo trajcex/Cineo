@@ -5,7 +5,7 @@
         <div class="title">
           <h1>{{title}}</h1>
         </div>
-        <div *ngIf="formSubmitted && (!movie.valid || actors.length === 0 || genres.length === 0 || directors.length === 0 || videoBase64 === '')" class="error-message">
+        <div *ngIf="formSubmitted && (!movie.valid || actors.length === 0 || genres.length === 0 || directors.length === 0 || videoBase64 === '' || receivedImageBase64 === '' )" class="error-message">
           All fields must be filled in.
         </div>
         <div class="inputs-basic-info">
@@ -42,6 +42,7 @@
               Description is required.
             </div>
           </div>
+
           <mat-form-field class="example-chip-list">
             <mat-label>Actors</mat-label>
             <mat-chip-grid #chipGridActors aria-label="Enter actors">
@@ -63,30 +64,6 @@
             </mat-chip-grid>
             <div *ngIf="formSubmitted && actors.length === 0" class="field-error">
               At least one actor is required.
-            </div>
-          </mat-form-field>
-
-          <mat-form-field class="example-chip-list">
-            <mat-label>Genres</mat-label>
-            <mat-chip-grid #chipGridGenres aria-label="Enter genres">
-              <mat-chip-row *ngFor="let genre of genres"
-                            (removed)="removeGenre(genre)"
-                            [editable]="true"
-                            (edited)="editGenre(genre, $event)"
-                            [aria-description]="'Press Enter to edit ' + genre">
-                {{ genre }}
-                <button matChipRemove [attr.aria-label]="'Remove ' + genre">
-                  <mat-icon>cancel</mat-icon>
-                </button>
-              </mat-chip-row>
-              <input placeholder="New genre..."
-                     [matChipInputFor]="chipGridGenres"
-                     [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-                     [matChipInputAddOnBlur]="addOnBlur"
-                     (matChipInputTokenEnd)="addGenre($event)"/>
-            </mat-chip-grid>
-            <div *ngIf="formSubmitted && genres.length === 0" class="field-error">
-              At least one genre is required.
             </div>
           </mat-form-field>
 
@@ -113,6 +90,23 @@
               At least one director is required.
             </div>
           </mat-form-field>
+
+          <mat-form-field class="example-chip-list">
+            <mat-label class="custom-label">Genres</mat-label>
+            <mat-select formControlName="genres" multiple required>
+              <mat-option *ngFor="let genre of predefinedGenres" [value]="genre">{{ genre }}</mat-option>
+            </mat-select>
+            <div *ngIf="formSubmitted && movie.get('genres')?.invalid" class="field-error">
+              At least one genre is required.
+            </div>
+          </mat-form-field>
+
+          <div class="imageUpload">
+            <app-image-upload (imageBase64String)="handleImageBase64($event)"></app-image-upload>
+            <div *ngIf="formSubmitted && receivedImageBase64 === ''" class="field-error">
+              Image upload is required.
+            </div>
+          </div>
 
           <div class="videoUpload">
             <app-video-upload (videoBase64String)="handleVideoBase64($event)"></app-video-upload>
