@@ -17,7 +17,7 @@ def handler(event, context):
     resolutionBase = event.get('resolutionBase','')
     
     input_file_path = f'/tmp/{os.path.basename(resolutionBase)}' + '.mp4'
-    input_key = movie_id + "-" + file_name + "/" + resolutionBase + ".mp4"
+    input_key = movie_id + "-" + file_name + "/" + "file.mp4"
     output_file_path = f'/tmp/resized_{os.path.basename(resolution)}' + '.mp4'
 
     resolution_map = {
@@ -42,7 +42,7 @@ def handler(event, context):
     
     resized_video_path = movie_id + "-" +  f"{file_name}/{resolution}" + ".mp4"
     
-    s3.upload_file(output_file_path, bucket_name, resized_video_path)
+    s3.upload_file(output_file_path, bucket_name, resized_video_path, ExtraArgs= {'ContentType': 'video/mp4'})
 
 
     return {

@@ -1,0 +1,81 @@
+*{
+    color: white;
+}
+#clip-div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: fit-content;
+    width: 100%;
+    height: fit-content;
+    min-height: 100%;
+    background-color: #171535;
+}
+#video-div{
+    width: 50%;
+}
+
+video{
+    width: 100%;
+}
+
+#title{
+    margin-top: 100px;
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+button{
+    width: 120px;
+    padding: 5px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    border-radius: 15px;
+    cursor: pointer;
+    border: none;
+    margin: 10px;
+}
+.delete-button {
+    background-color: white;
+    text-align: center;
+    white-space: nowrap; 
+    color: #171535;
+    font-weight: 500;
+}
+.download-button{
+    background-color: #171535;
+    border: 3px solid white;
+}
+#movie-info{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+.div-movie-data{
+    display: flex;
+    align-items: center;
+}
+hr{
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+select{
+    background-color: #171535;
+    border-radius: 5px;
+    padding: 2px;
+    border: 2px solid white;
+    cursor: pointer;
+}
+option{
+    cursor: pointer;
+}
+#buttons-class{
+    margin-top: 20px;
+    margin-bottom: 20px;
+    display: flex;
+    width: 50%;
+    justify-content: center;
+}
