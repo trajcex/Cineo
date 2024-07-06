@@ -38,4 +38,12 @@ export class LambdaService {
       this.url + '/getSubscription?userID=' + this.auth.getUserID()
     );
   }
+
+  public subscribe(body: any): Observable<any> {
+    return this.http.put(this.url + '/subscribe', body);
+  }
+
+  public unsubscribe(body: any): Observable<any> {
+    return this.http.post(this.url + '/unsubscribe', body);
+  }
 }

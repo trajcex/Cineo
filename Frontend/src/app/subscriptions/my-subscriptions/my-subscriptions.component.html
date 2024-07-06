@@ -1,9 +1,35 @@
 <div class="main-container">
   <div class="main">
-    <div class="section">
+    <div style="display: flex; justify-content: center">
+      <button
+        type="button"
+        class="btn btn-success me-2"
+        [disabled]="
+          subscriptions.includes(subscribeValue) || subscribeValue === ''
+        "
+        (click)="subscribe()"
+      >
+        Subscribe
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        [disabled]="
+          !subscriptions.includes(subscribeValue) || subscribeValue === ''
+        "
+        (click)="unsubscribe()"
+      >
+        Unsubscribe
+      </button>
+    </div>
+    <div class="section mt-4">
       <h2>Actors</h2>
       <ul>
-        <li *ngFor="let item of actors">
+        <li
+          *ngFor="let item of actors"
+          (click)="setValue(item, 'actors')"
+          [ngClass]="{ selected: subscribeValue === item }"
+        >
           {{ item }}
           <i
             class="bi bi-check-circle icon"
@@ -16,7 +42,11 @@
     <div class="section">
       <h2>Genres</h2>
       <ul>
-        <li *ngFor="let item of genres">
+        <li
+          *ngFor="let item of genres"
+          (click)="setValue(item, 'genres')"
+          [ngClass]="{ selected: subscribeValue === item }"
+        >
           {{ item }}
           <i
             class="bi bi-check-circle icon"
@@ -29,7 +59,11 @@
     <div class="section">
       <h2>Directors</h2>
       <ul>
-        <li *ngFor="let item of directors">
+        <li
+          *ngFor="let item of directors"
+          (click)="setValue(item, 'directors')"
+          [ngClass]="{ selected: subscribeValue === item }"
+        >
           {{ item }}
           <i
             class="bi bi-check-circle icon"

@@ -48,3 +48,7 @@ li:hover {
   color: green;
   font-size: 24px;
 }
+.selected {
+  background-color: rgb(117, 115, 118);
+  color: white;
+}
