@@ -12,25 +12,77 @@ import { LambdaService } from 'src/app/service/lambda.service';
 export class ViewMovieComponent {
 
   constructor(private lambdaService: LambdaService, private router: Router) {}
+  id : string = "510243da-24aa-421e-ae57-3861ebf8ca2a"
+  fileName: string = "maric"
+
+
+  selectedResolution: string = 'file'; 
 
   base64: string = 'data:video/mp4;base64,';
-  videoBase64: string | undefined;
+  movie: Movie | undefined;
+  videoBase64: string = "";
+  title: string = "";
+  downloadUrl : string | undefined;
   ngOnInit(): void {
-    this.lambdaService.getMovie('a4ccef0b-decb-4782-8985-6edb13548c35','maric','720').subscribe({
-
+    this.lambdaService.getMovie(this.id,this.fileName, this.selectedResolution).subscribe({
       next:(movie: Movie) => {
-        // this.videoBase64 = movie;
-        this.videoBase64 = movie.video_content;
-        this.videoBase64 = this.cleanBase64String(movie.video_content);
-        this.videoBase64 = this.base64 + this.videoBase64;
-        console.log(this.videoBase64);
+        this.movie = movie;
+        // this.videoBase64 = movie.video_content;
+        this.movie.video_content = movie.video_content?.slice(2,-1);
+        this.videoBase64 = this.base64 + this.movie.video_content;
+        console.log(this.movie);
       }
     })
   }
-  cleanBase64String(base64Str: string | ""): string {
-    return base64Str.slice(2,-1);
+
+  onDownload(): void {
+    this.lambdaService.getMovieUrl(this.id,this.fileName, this.selectedResolution).subscribe({
+      next:movie => {
+        console.log(movie.video_content);
+        fetch(movie.video_content || "")
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.blob(); 
+          })
+          .then(blob => {
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = downloadUrl;
+            a.download = `${this.movie?.fileName}.mp4`; 
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            window.URL.revokeObjectURL(downloadUrl);
+          })
+          .catch(error => {
+            console.error('Error fetching the file:', error);
+          });
+    }
+  })
   }
 
+  onDelete(): void {
+    this.lambdaService.deleteMovie(this.id, this.fileName).subscribe({
+      next: result =>  {
+        console.log(result);
+        this.router.navigate(['/home']);
+      },
+      error: () =>{
+        console.log("Error");
+      }
+    })
+  }
 
-
+  onResolutionChange(): void {
+    this.lambdaService.getMovie(this.id,this.fileName, this.selectedResolution).subscribe({
+      next: (movie: Movie) =>{
+        movie.video_content = movie.video_content?.slice(2,-1);
+        this.videoBase64 = this.base64 + movie.video_content;
+        console.log(this.movie);
+      }
+    })
+  }
 }

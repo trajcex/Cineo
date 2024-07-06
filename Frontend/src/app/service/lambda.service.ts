@@ -24,5 +24,30 @@ export class LambdaService {
       return this.http.get<Movie>(url, { params });
   }
 
+  getMovieUrl(id: string, fileName: string, resolution: string): Observable<Movie> {
+    const url = this.url + `/getMovieUrl`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id',  id || '')
+      .set('resolution', resolution || '')
+      return this.http.get<Movie>(url, { params });
+  }
+
+  downloadMovie(id: string, fileName: string, resolution: string): Observable<Movie> {
+    const url = this.url + `/download`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id',  id || '')
+      .set('resolution', resolution || '')
+      return this.http.get<Movie>(url, { params });
+  }
+  deleteMovie(id: string, fileName: string): Observable<string> {
+    const url = this.url + `/delete`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id',  id || '')
+      return this.http.delete<string>(url, { params });
+  }
+
 
 }
