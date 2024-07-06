@@ -19,7 +19,7 @@ const dataStackMaric = new DataStack(app, "DataStackMaric", {
 });
 const cognito = new CognitoStack(app, "CognitoStack", {});
 
-const infrastractureStackMaric =  new InfrastructureStack(app, "InfrastractureStackMaric", {
+const infrastractureStackMaric = new InfrastructureStack(app, "InfrastractureStackMaric", {
     bucketName: "cineo-bucket-maric",
     dbName: "DBNAME",
     bucketID: "Bucket",
@@ -30,35 +30,21 @@ const infrastractureStackMaric =  new InfrastructureStack(app, "InfrastractureSt
 
 new ContentTranscoderStack(app, "ContentTranscoderStack", {
     uploadMovie: infrastractureStackMaric.uploadMovie,
-    bucketName: dataStackMaric.bucketName,
-    movieBucket: dataStackMaric.movieBucket,
+    bucketName: dataStack.bucketName,
+    movieBucket: dataStack.movieBucket,
 });
 
+const dataStackTrajce = new DataStack(app, "DataStackTrajce", {
+    bucketName: "cineo-bucket-trajce",
+    bucketID: "BucketTrajce",
+});
 const infrastractureStackTrajce = new InfrastructureStack(app, "InfrastructureStackTrajce", {
     bucketName: "cineo-bucket-trajce",
     dbName: "DBNAMETrajce",
     bucketID: "BucketTrajce",
-    movieBucket: dataStack.movieBucket,
+    movieBucket: dataStackTrajce.movieBucket,
     userPoolID: cognito.userPoolID,
     clientID: cognito.clientID,
 });
 
-const dataStackStefan = new DataStack(app, "DataStackStefan", {
-    bucketName: "cineo-bucket-stefan",
-    bucketID: "Bucket",
-});
-const infrastractureStackStefan =  new InfrastructureStack(app, "InfrastractureStackStefan", {
-    bucketName: "cineo-bucket-stefan",
-    dbName: "DBNAME",
-    bucketID: "Bucket",
-    movieBucket: dataStackStefan.movieBucket,
-    userPoolID: cognito.userPoolID,
-    clientID: cognito.clientID,
-});
-
-new ContentTranscoderStack(app, "ContentTranscoderStackStefan", {
-    uploadMovie: infrastractureStackStefan.uploadMovie,
-    bucketName: dataStackStefan.bucketName,
-    movieBucket: dataStackStefan.movieBucket
-});
 app.synth();
