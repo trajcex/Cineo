@@ -1,11 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { LiveAnnouncer } from "@angular/cdk/a11y";
 import { MatChipInputEvent, MatChipEditedEvent } from "@angular/material/chips";
 import { COMMA, ENTER } from "@angular/cdk/keycodes";
-import {HttpClient, HttpErrorResponse, HttpHeaders} from "@angular/common/http";
-import {environment} from "../../../env/env";
-import {Router} from "@angular/router";
+import { HttpClient, HttpErrorResponse, HttpHeaders } from "@angular/common/http";
+import { environment } from "../../../env/env";
+import { Router } from "@angular/router";
+import { ImageUploadComponent } from "../image-upload/image-upload.component";
 
 @Component({
   selector: 'app-add-movie',
@@ -13,7 +14,7 @@ import {Router} from "@angular/router";
   styleUrls: ['./add-movie.component.css']
 })
 export class AddMovieComponent {
-
+  @ViewChild(ImageUploadComponent) childComponent!: ImageUploadComponent;
   fb = inject(FormBuilder);
 
   title = "Let's add a new movie!";
@@ -24,11 +25,18 @@ export class AddMovieComponent {
   directors: string[] = [];
   formSubmitted: boolean = false;
   videoBase64: string = '';
+  receivedImageBase64: string = '';
+
+  picture: File[] = [];
 
   predefinedGenres: string[] = ['Action', 'Comedy', 'Drama', 'Fantasy', 'Horror', 'Romance', 'Sci-Fi', 'Thriller'];
 
   constructor(private announcer: LiveAnnouncer, private http: HttpClient, private router: Router) {}
 
+  handleImageBase64(base64String: string) {
+    console.log('Received Base64 image in parent component:', base64String);
+    this.receivedImageBase64 = base64String;
+  }
   handleVideoBase64(base64String: string) {
     console.log('Received Base64 string in parent component:', base64String);
     this.videoBase64 = base64String;
@@ -122,7 +130,7 @@ export class AddMovieComponent {
     this.formSubmitted = true;
     this.trimValues();
 
-    if (this.movie.invalid || this.videoBase64 === '') {
+    if (this.movie.invalid || this.videoBase64 === '' || this.receivedImageBase64 === '') {
       return;
     }
 
@@ -140,6 +148,7 @@ export class AddMovieComponent {
       genres: this.movie.value.genres, // Use selected genres from form value
       resolution: this.movie.value.resolution,
       video_data: this.videoBase64,
+      // thumbnail: this.imageBase64String // Add image data to the body
     };
 
     console.log('Submitting:', body);

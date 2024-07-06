@@ -5,10 +5,11 @@
         <div class="title">
           <h1>{{title}}</h1>
         </div>
-        <div *ngIf="formSubmitted && (!movie.valid || actors.length === 0 || genres.length === 0 || directors.length === 0 || videoBase64 === '')" class="error-message">
+        <div *ngIf="formSubmitted && (!movie.valid || actors.length === 0 || genres.length === 0 || directors.length === 0 || videoBase64 === '' || receivedImageBase64 === '' )" class="error-message">
           All fields must be filled in.
         </div>
         <div class="inputs-basic-info">
+          <!-- Input fields for fileName, title, resolution, and description -->
           <div class="input-field">
             <label for="fileName">File name</label>
             <input id="fileName" formControlName="fileName" type="text" required placeholder="File name">
@@ -42,6 +43,8 @@
               Description is required.
             </div>
           </div>
+
+          <!-- Input fields for actors -->
           <mat-form-field class="example-chip-list">
             <mat-label>Actors</mat-label>
             <mat-chip-grid #chipGridActors aria-label="Enter actors">
@@ -66,6 +69,7 @@
             </div>
           </mat-form-field>
 
+          <!-- Input fields for directors -->
           <mat-form-field class="example-chip-list">
             <mat-label>Directors</mat-label>
             <mat-chip-grid #chipGridDirectors aria-label="Enter directors">
@@ -90,6 +94,7 @@
             </div>
           </mat-form-field>
 
+          <!-- Input fields for genres -->
           <mat-form-field class="example-chip-list">
             <mat-label class="custom-label">Genres</mat-label>
             <mat-select formControlName="genres" multiple required>
@@ -100,7 +105,15 @@
             </div>
           </mat-form-field>
 
+          <!-- Image upload component -->
+          <div class="imageUpload">
+            <app-image-upload (imageBase64String)="handleImageBase64($event)"></app-image-upload>
+            <div *ngIf="formSubmitted && receivedImageBase64 === ''" class="field-error">
+              Image upload is required.
+            </div>
+          </div>
 
+          <!-- Video upload component -->
           <div class="videoUpload">
             <app-video-upload (videoBase64String)="handleVideoBase64($event)"></app-video-upload>
             <div *ngIf="formSubmitted && videoBase64 === ''" class="field-error">

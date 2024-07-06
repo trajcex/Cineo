@@ -36,6 +36,7 @@ export class VideoUploadComponent {
   deleteVideo(index: number) {
     this.files.splice(index, 1);
     this.videoPreviews.splice(index, 1);
+    this.videoBase64String.emit('');
   }
 
   private convertFileToBase64(file: File) {
