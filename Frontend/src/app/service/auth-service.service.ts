@@ -44,6 +44,23 @@ export class AuthServiceService {
       return '';
     }
   }
+
+  public getUserID(): string {
+    try {
+      const decodedToken: any = decodeJWT(
+        this.getAccessTokenFromLocalStorage() || ''
+      );
+      const roles: string | undefined = decodedToken['payload']['sub'];
+      if (roles && roles.length > 0) {
+        return roles;
+      } else {
+        return '';
+      }
+    } catch (error) {
+      console.error('Error decoding accessToken:', error);
+      return '';
+    }
+  }
   signOut() {
     signOut();
   }
