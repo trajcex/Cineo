@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/env/env';
+import { AuthServiceService } from './auth-service.service';
 @Injectable({
   providedIn: 'root',
 })
 export class LambdaService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthServiceService) {}
 
   url: string =
     'https://' + environment.apiID + '.execute-api.eu-central-1.amazonaws.com';
@@ -30,5 +31,11 @@ export class LambdaService {
 
   public getPossibleSubscriptions(): Observable<any> {
     return this.http.get(this.url + '/getPossibleSubcription');
+  }
+
+  public getSubscriptions(): Observable<any> {
+    return this.http.get(
+      this.url + '/getSubscription?userID=' + this.auth.getUserID()
+    );
   }
 }
