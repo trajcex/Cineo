@@ -16,14 +16,16 @@ def handler(event, context):
         
         response = s3.get_object(Bucket=bucket_name, Key= s3_object_path)
         video_content = response['Body'].read()
-        video_content = base64.b64encode(video_content).decode()
+        video_content = base64.b64encode(video_content)
 
         return {
             'statusCode': 200,
-            'headers': {
-                    'Content-Type': 'video/mp4',
-                },
-                'body': video_content,
+            # 'headers': {
+            #         'Content-Type': 'video/mp4',
+            #     },
+                'body': {
+                    "video_content":video_content,
+                         },
                 'isBase64Encoded': True
             }
     

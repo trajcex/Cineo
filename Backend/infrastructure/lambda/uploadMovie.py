@@ -66,8 +66,6 @@ def handler(event, context):
 
         resolutions = ['144','360','480','720']
             
-        resolutions.remove(resolution)
-
         input_data = [{
             'id': str(movie_id),
             'fileName': file_name,

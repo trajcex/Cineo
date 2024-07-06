@@ -19,6 +19,7 @@ def handler(event, context):
             Params={
                 'Bucket': bucket_name,
                 'Key': s3_object_path
+                # 'ResponseContentDisposition': 'attachment'
                 }
             )
         
