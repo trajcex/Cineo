@@ -1,85 +1,104 @@
-*{
-    color: white;
+* {
+  color: white;
 }
 #clip-div {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    height: fit-content;
-    width: 100%;
-    height: fit-content;
-    min-height: 100%;
-    background-color: #171535;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: fit-content;
+  width: 100%;
+  height: fit-content;
+  min-height: 100%;
+  background-color: #171535;
 }
-#video-div{
-    width: 50%;
-}
-
-video{
-    width: 100%;
+#video-div {
+  width: 50%;
 }
 
-#title{
-    width: 50%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+video {
+  width: 100%;
 }
-button{
-    width: 120px;
-    padding: 5px;
-    padding-top: 7px;
-    padding-bottom: 7px;
-    border-radius: 15px;
-    cursor: pointer;
-    border: none;
-    margin: 10px;
+
+#title {
+  width: 50%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+button {
+  width: 120px;
+  padding: 5px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border-radius: 15px;
+  cursor: pointer;
+  border: none;
+  margin: 10px;
 }
 .delete-button {
-    background-color: white;
-    text-align: center;
-    white-space: nowrap; 
-    color: #171535;
-    font-weight: 500;
+  background-color: white;
+  text-align: center;
+  white-space: nowrap;
+  color: #171535;
+  font-weight: 500;
 }
-.download-button{
-    width: 60px;
-    background-color: #171535;
-    border: 3px solid white;
+.download-button {
+  width: 60px;
+  background-color: #171535;
+  border: 3px solid white;
 }
-.change-button{
-    background-color: #171535;
-    border: 3px solid white;
+.change-button {
+  background-color: #171535;
+  border: 3px solid white;
 }
-#movie-info{
-    display: flex;
-    flex-direction: column;
-    width: 50%;
+#movie-info {
+  display: flex;
+  flex-direction: column;
+  width: 50%;
 }
-.div-movie-data{
-    display: flex;
-    align-items: center;
+.div-movie-data {
+  display: flex;
+  align-items: center;
 }
-hr{
-    width: 100%;
-    margin-bottom: 20px;
+hr {
+  width: 100%;
+  margin-bottom: 20px;
 }
 
-select{
-    background-color: #171535;
-    border-radius: 5px;
-    padding: 2px;
-    border: 2px solid white;
-    cursor: pointer;
+select {
+  background-color: #171535;
+  border-radius: 5px;
+  padding: 2px;
+  border: 2px solid white;
+  cursor: pointer;
 }
-option{
-    cursor: pointer;
+option {
+  cursor: pointer;
 }
-#buttons-class{
-    margin-top: 20px;
-    margin-bottom: 20px;
-    display: flex;
-    width: 50%;
-    justify-content: center;
+#buttons-class {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  width: 50%;
+  justify-content: center;
+}
+
+.icons {
+  display: flex;
+  align-items: center;
+  justify-content: end;
+  font-size: large;
+}
+
+.icons i {
+  margin-right: 10px; /* Podesite razmak između ikona po potrebi */
+}
+.buttons {
+  display: flex;
+  justify-content: center;
+}
+i:hover {
+  scale: 1.3;
 }
