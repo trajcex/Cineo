@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
-import {Movie} from "../models/movie.model";
 import {AuthServiceService} from "../../service/auth-service.service";
 import {Router} from "@angular/router";
 import {LambdaService} from "../../service/lambda.service";
+import {MovieCard} from "../models/movie.model";
 
 @Component({
   selector: 'app-all-movies',
@@ -14,7 +14,7 @@ export class AllMoviesComponent {
   role: string = '';
   searchType: string = 'title';
   searchValue: string = '';
-  movies: Movie[] = []
+  movies: MovieCard[] = []
     constructor(private auth: AuthServiceService, private router: Router, private lambdaService: LambdaService) {
   }
   ngOnInit(): void {
@@ -24,7 +24,7 @@ export class AllMoviesComponent {
 
   loadAllMovies() {
     this.lambdaService.getAllMovies().subscribe({
-      next: (data: Movie[]) => {
+      next: (data: MovieCard[]) => {
         this.movies = data;
         console.log(this.movies);
       },
@@ -42,7 +42,7 @@ export class AllMoviesComponent {
     console.log(this.searchType);
     console.log(this.searchValue);
     this.lambdaService.searchMovies(this.searchType, this.searchValue).subscribe({
-      next: (data: Movie[]) => {
+      next: (data: MovieCard[]) => {
         this.movies = data;
         console.log(this.movies);
       },
