@@ -20,12 +20,13 @@ export class ViewMovieComponent {
   id: string = '68623db8-1c3e-401e-af4c-8635b69ae82c';
   fileName: string = 'neki';
 
-  element: string = '';
+  element: string = 'none';
   fill: boolean = true;
 
   setLike(element: string, fill: boolean) {
     var type = element;
     if (this.element === element && fill === false) type = 'none';
+    console.log(type);
     var body = {
       userID: this.auth.getUserID(),
       movieID: this.id,
@@ -33,14 +34,14 @@ export class ViewMovieComponent {
     };
     this.element = element;
     this.fill = fill;
-    this.lambdaService.likeMovie(body).subscribe({
-      next: (result) => {
-        console.log(result);
-      },
-      error: () => {
-        console.log('Error');
-      },
-    });
+    // this.lambdaService.likeMovie(body).subscribe({
+    //   next: (result) => {
+    //     console.log(result);
+    //   },
+    //   error: () => {
+    //     console.log('Error');
+    //   },
+    // });
   }
 
   selectedResolution: string = 'file';

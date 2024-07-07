@@ -20,7 +20,7 @@
         (click)="setLike('heart', true)"
         *ngIf="
           (!fill && element === 'heart') ||
-          element === '' ||
+          element === 'none' ||
           element !== 'heart'
         "
       ></i>
@@ -33,7 +33,9 @@
         class="bi bi-hand-thumbs-up"
         (click)="setLike('like', true)"
         *ngIf="
-          (!fill && element === 'like') || element === '' || element !== 'like'
+          (!fill && element === 'like') ||
+          element === 'none' ||
+          element !== 'like'
         "
       ></i>
       <i
@@ -46,7 +48,7 @@
         (click)="setLike('dislike', true)"
         *ngIf="
           (!fill && element === 'dislike') ||
-          element === '' ||
+          element === 'none' ||
           element !== 'dislike'
         "
       ></i>
