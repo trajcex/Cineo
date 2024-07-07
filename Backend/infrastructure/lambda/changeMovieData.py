@@ -1,6 +1,7 @@
 import boto3
 import os
 import json
+from datetime import datetime
 
 def handler(event, context):
     try:
@@ -13,15 +14,15 @@ def handler(event, context):
         actors = parse_list_or_string(body.get('actors',[]))
         directors = parse_list_or_string(body.get('directors',[]))
         genres = parse_list_or_string(body.get('genres',[]))
-
+        updatedAt = datetime.utcnow().isoformat()
 
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(table_name)
 
         table.update_item(
             Key={'id': movie_id},
-            UpdateExpression="set title=:title, description=:description, genres=:genres, actors=:actors, directors=:directors",
-            ExpressionAttributeValues={":title": (str(title)), ":description": str(description), ":genres":str(genres), ":actors":str(actors), ":directors":str(directors)},
+            UpdateExpression="set title=:title, description=:description, genres=:genres, actors=:actors, directors=:directors, updatedAt=:updatedAt",
+            ExpressionAttributeValues={":title": (str(title)), ":description": str(description), ":genres":str(genres), ":actors":str(actors), ":directors":str(directors), ":updatedAt":updatedAt},
             ReturnValues="UPDATED_NEW",
             )
         return {

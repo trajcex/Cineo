@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Movie } from 'src/app/model/movieInfo';
 import { LambdaService } from 'src/app/service/lambda.service';
 
@@ -11,7 +11,7 @@ import { LambdaService } from 'src/app/service/lambda.service';
 })
 export class ViewMovieComponent {
 
-  constructor(private lambdaService: LambdaService, private router: Router) {}
+  constructor(private lambdaService: LambdaService, private router: Router, private route: ActivatedRoute) {}
   id : string = "68623db8-1c3e-401e-af4c-8635b69ae82c"
   fileName: string = "neki"
 
@@ -24,6 +24,11 @@ export class ViewMovieComponent {
   title: string = "";
   downloadUrl : string | undefined;
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      this.id = params['id'];
+      this.fileName = params['fileName'];
+      console.log(this.fileName);
+    })
     this.lambdaService.getMovie(this.id,this.fileName, this.selectedResolution).subscribe({
       next:(movie: Movie) => {
         this.movie = movie;

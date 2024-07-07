@@ -18,7 +18,8 @@ export class ChangeMovieComponent {
 
   constructor(private lambdaService: LambdaService, private router: Router,private announcer: LiveAnnouncer,private route: ActivatedRoute) {}
   
-  id : string = "68623db8-1c3e-401e-af4c-8635b69ae82c";
+  id : string = "";
+  fileName: string = "";
 
   title = "Change data about your video";
   actors: string[] = ["asdfas","asdf"];
@@ -34,7 +35,9 @@ export class ChangeMovieComponent {
   selectedGenres: string[] = [];
   ngOnInit(): void {
       this.route.queryParams.subscribe(params => {
-        
+        this.id = params['id'];
+        this.fileName = params['fileName'];
+        console.log(this.id, this.fileName);
         this.actors = params['actors'];
         this.directors = params['directors'];
         
@@ -44,7 +47,6 @@ export class ChangeMovieComponent {
           genres: [params['genres']]
         });        
         this.selectedGenres = params['genres'][0].split(',').map((genre: string) => genre.trim());
-        console.log("genrees:",this.selectedGenres);
         }
       );
   }
@@ -160,14 +162,9 @@ export class ChangeMovieComponent {
       next:(message: string) => {
         
         console.log(message);
-        this.router.navigate(['/view-movie']);
-
+        this.router.navigate(['/view-movie'], { queryParams: {id: this.id, fileName: this.fileName} });
       }
     })
     
-  }
-
-  onCancel(): void {
-    this.router.navigate(['/view-movie']);
   }
 }

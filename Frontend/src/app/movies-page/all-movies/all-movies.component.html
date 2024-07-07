@@ -19,7 +19,7 @@
       </div>
     </div>
     <div class="movie-grid">
-      <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/view-movie']">
+      <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/view-movie']" [queryParams]="{id: movie.id, fileName: movie.fileName}">
         <div class="movie-image">
           <img [src]="movie.thumbnailUrl" alt="{{movie.title}}">
         </div>

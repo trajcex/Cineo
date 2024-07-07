@@ -85,8 +85,8 @@
 
         </div>
         <div class="add-buttons">
-          <button mat-raised-button (click)="onCancel()" id="cancel">Cancel</button>
-          <button mat-raised-button type="submit" id="add">Change</button>
+          <button mat-raised-button id="cancel" [routerLink]="['/view-movie']" [queryParams]="{id: id, fileName: fileName}">Cancel</button>
+          <button mat-raised-button type="submit" id="add" >Change</button>
         </div>
       </div>
     </form>
