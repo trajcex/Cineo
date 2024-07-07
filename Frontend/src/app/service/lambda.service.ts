@@ -25,8 +25,8 @@ export class LambdaService {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
       }),
-      responseType: 'text', // Postavite responseType na 'text' ovde
-      observe: 'response' // Opciono, ako želite pristup celom HttpResponse-u
+      responseType: 'text', 
+      observe: 'response' 
     }).pipe(
       map((response: HttpResponse<string>) => {
         return response.body;
@@ -53,8 +53,8 @@ export class LambdaService {
     const url = this.url + `/getMovie`;
     let params = new HttpParams()
       .set('file', fileName || '')
-      .set('id', id || '')
-      .set('resolution', resolution || '');
+      .set('id',  id || '')
+      .set('resolution', resolution || '')
     return this.http.get<Movie>(url, { params });
   }
 
@@ -66,8 +66,8 @@ export class LambdaService {
     const url = this.url + `/getMovieUrl`;
     let params = new HttpParams()
       .set('file', fileName || '')
-      .set('id', id || '')
-      .set('resolution', resolution || '');
+      .set('id',  id || '')
+      .set('resolution', resolution || '')
     return this.http.get<Movie>(url, { params });
   }
 
@@ -79,16 +79,30 @@ export class LambdaService {
     const url = this.url + `/download`;
     let params = new HttpParams()
       .set('file', fileName || '')
-      .set('id', id || '')
-      .set('resolution', resolution || '');
+      .set('id',  id || '')
+      .set('resolution', resolution || '')
     return this.http.get<Movie>(url, { params });
   }
   deleteMovie(id: string, fileName: string): Observable<string> {
     const url = this.url + `/delete`;
     let params = new HttpParams()
       .set('file', fileName || '')
-      .set('id', id || '');
+      .set('id',  id || '')
     return this.http.delete<string>(url, { params });
+  }
+  changeMovie(id: string, directors: string[], actors: string[], genres: string[], title: string, description: string): Observable<string> {
+    const url = this.url + `/changeMovieData`;
+    let params = new HttpParams()
+      .set('id',  id || '')
+
+    const body = {
+      directors: directors,
+      actors: actors,
+      genres: genres,
+      title: title,
+      description: description
+    };
+    return this.http.put<string>(url, {body},{params});
   }
 
   public getPossibleSubscriptions(): Observable<any> {

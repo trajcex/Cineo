@@ -11,6 +11,8 @@ import { VideoUploadComponent } from './video-upload/video-upload.component';
 import {NgxDropzoneModule} from "ngx-dropzone";
 import {MaterialModule} from "../infrastructure/material/material.module";
 import { ImageUploadComponent } from './image-upload/image-upload.component';
+import { ChangeMovieComponent } from './change-movie/change-movie.component';
+import { RouterModule } from '@angular/router';
 
 
 
@@ -19,7 +21,8 @@ import { ImageUploadComponent } from './image-upload/image-upload.component';
     AddMovieComponent,
     ViewMovieComponent,
     VideoUploadComponent,
-    ImageUploadComponent
+    ImageUploadComponent,
+    ChangeMovieComponent
   ],
     imports: [
         CommonModule,
@@ -29,7 +32,12 @@ import { ImageUploadComponent } from './image-upload/image-upload.component';
         MatChipsModule,
         MatIconModule,
         NgxDropzoneModule,
-        MaterialModule
+        MaterialModule,
+        RouterModule
+    ],
+    exports:[
+      ViewMovieComponent,
+      AddMovieComponent
     ]
 })
 export class MovieModule { }

@@ -30,8 +30,8 @@ const infrastractureStackMaric = new InfrastructureStack(app, "InfrastractureSta
 
 new ContentTranscoderStack(app, "ContentTranscoderStack", {
     uploadMovie: infrastractureStackMaric.uploadMovie,
-    bucketName: dataStack.bucketName,
-    movieBucket: dataStack.movieBucket,
+    bucketName: dataStackMaric.bucketName,
+    movieBucket: dataStackMaric.movieBucket,
 });
 
 const dataStackTrajce = new DataStack(app, "DataStackTrajce", {

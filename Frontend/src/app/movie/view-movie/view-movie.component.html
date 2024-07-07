@@ -15,6 +15,7 @@
         <video width="400" controls src="{{videoBase64}}"></video>
     </div>
     <div id="buttons-class">
+        <button class="download-button" [routerLink]="['/change-movie']" [queryParams]="{id: id, fileName: fileName, title: movie?.title, description: movie?.description, actors: movie?.actors, directors:movie?.directors, genres: movie?.genres}">Change</button>
         <button class="download-button" (click)="onDownload()">Download</button>
         <button class="delete-button" (click)="onDelete()">Delete Video</button>
     </div>
