@@ -105,6 +105,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getLikeForMovie = new lambda.Function(this, "GetLikeForMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getLikeForMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const getPersonalFeed = new lambda.Function(this, "GetPersonalFeed", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getPersonalFeed.handler",
@@ -207,7 +213,7 @@ export class InfrastructureStack extends cdk.Stack {
                     apigatewayv2.CorsHttpMethod.POST,
                     apigatewayv2.CorsHttpMethod.OPTIONS,
                 ],
-                allowOrigins: ["http://localhost:4200"],
+                allowOrigins: ["http://localhost:4200", "https://frontend-cineo.s3.eu-central-1.amazonaws.com"],
                 allowHeaders: ["Content-Type", "Authorization"],
                 allowCredentials: true,
                 exposeHeaders: ["*"],
@@ -219,12 +225,19 @@ export class InfrastructureStack extends cdk.Stack {
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
-        const changeMovieDataIntegration = new HttpLambdaIntegration("ChangeMovieDate", changeMovieData);
+        const changeMovieDataIntegration = new HttpLambdaIntegration(
+            "ChangeMovieDate",
+            changeMovieData
+        );
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
         const getAllMoviesIntegration = new HttpLambdaIntegration("GetAllMovies", getAllMovies);
         const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
+        const getLikeForMovieIntegration = new HttpLambdaIntegration(
+            "GetLikeForMovie",
+            getLikeForMovie
+        );
         const getPersonalFeedIntegration = new HttpLambdaIntegration("GetPersonalFeed", getPersonalFeed);
 
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
@@ -269,6 +282,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/getMovie",
             methods: [apigatewayv2.HttpMethod.GET],
             integration: getMovieWatchIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/getLikeForMovie",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getLikeForMovieIntegration,
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
@@ -406,7 +425,7 @@ export class InfrastructureStack extends cdk.Stack {
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
         getMovie.addEnvironment("TABLE_NAME", table.tableName);
         getMovieUrl.addEnvironment("TABLE_NAME", table.tableName);
-        changeMovieData.addEnvironment("TABLE_NAME",table.tableName);
+        changeMovieData.addEnvironment("TABLE_NAME", table.tableName);
         getPossibleSubcription.addEnvironment("TABLE_NAME", table.tableName);
 
         const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {
@@ -434,6 +453,7 @@ export class InfrastructureStack extends cdk.Stack {
         });
 
         likeMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
+        getLikeForMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
 
         tableMovieLike.grantReadWriteData(likeMovie);
 
@@ -452,5 +472,6 @@ export class InfrastructureStack extends cdk.Stack {
         subscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         unsubscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         likeMovie.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
+        tableMovieLike.grantReadData(getLikeForMovie);
     }
 }
