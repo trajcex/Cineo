@@ -1,4 +1,16 @@
 <div id="clip-div">
+  <div id="movie-info">
+    <div class="div-movie-data">
+      <p>Genres: {{ movie?.genres }}</p>
+    </div>
+    <div class="div-movie-data">
+      <p>Actors: {{ movie?.actors }}</p>
+    </div>
+    <div class="div-movie-data">
+      <p>Directors: {{ movie?.directors }}</p>
+    </div>
+  </div>
+
   <div id="title">
     <h2>{{ movie?.title }}</h2>
     <div>
@@ -58,9 +70,9 @@
         *ngIf="fill && element === 'dislike'"
       ></i>
     </div>
-    <div class="buttons">
+    <div id="buttons-class">
       <button
-        class="download-button"
+        class="change-button"
         [routerLink]="['/change-movie']"
         [queryParams]="{
           id: id,
@@ -72,24 +84,18 @@
           genres: movie?.genres
         }"
       >
-        Change
+        Change data
       </button>
-      <button class="download-button" (click)="onDownload()">Download</button>
-      <button class="delete-button" (click)="onDelete()">Delete Video</button>
+      <button class="download-button" (click)="onDownload()">
+        <img src="assets/images/download-icon.svg" alt="Delete Icon" />
+      </button>
+      <button class="delete-button" (click)="onDelete()">Delete video</button>
     </div>
-  </div>
-  <div id="movie-info">
-    <h2>Description:</h2>
-    <p>{{ movie?.description }}</p>
-    <hr />
-    <div class="div-movie-data">
-      <p>Genres: {{ movie?.genres }}</p>
-    </div>
-    <div class="div-movie-data">
-      <p>Actors: {{ movie?.actors }}</p>
-    </div>
-    <div class="div-movie-data">
-      <p>Directors: {{ movie?.directors }}</p>
+    <div id="movie-info">
+      <hr />
+      <h2>Description:</h2>
+      <p>{{ movie?.description }}</p>
+      <hr />
     </div>
   </div>
 </div>

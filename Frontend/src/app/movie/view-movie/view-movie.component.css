@@ -20,7 +20,6 @@ video {
 }
 
 #title {
-  margin-top: 100px;
   width: 50%;
   display: flex;
   justify-content: space-between;
@@ -45,6 +44,11 @@ button {
   font-weight: 500;
 }
 .download-button {
+  width: 60px;
+  background-color: #171535;
+  border: 3px solid white;
+}
+.change-button {
   background-color: #171535;
   border: 3px solid white;
 }
