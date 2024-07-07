@@ -12,9 +12,8 @@ def handler(event,context):
         table_name = os.environ['TABLE_NAME']
         table = dynamodb.Table(table_name)
         
-        # body = json.loads(event['body']) 
-        body = event['body']
-
+        body = json.loads(event['body']) 
+        
         userID = body['userID']
         movieID = body['movieID']
         type = body['type']
