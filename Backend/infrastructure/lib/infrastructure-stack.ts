@@ -199,7 +199,7 @@ export class InfrastructureStack extends cdk.Stack {
                     apigatewayv2.CorsHttpMethod.POST,
                     apigatewayv2.CorsHttpMethod.OPTIONS,
                 ],
-                allowOrigins: ["http://localhost:4200"],
+                allowOrigins: ["http://localhost:4200", "https://frontend-cineo.s3.eu-central-1.amazonaws.com"],
                 allowHeaders: ["Content-Type", "Authorization"],
                 allowCredentials: true,
                 exposeHeaders: ["*"],
