@@ -27,15 +27,15 @@ def handler(event, context):
             genre_value = item.get('genres', []).split(',') 
             genres.update({value.strip():'' for value in genre_value})
             
-            category ={
-                'actors': list(actors.keys()),
-                'directors': list(directors.keys()),
-                'genres': list(genres.keys())
-            }
-            return{
-                'statusCode': 200,
-                'body': json.dumps(category)
-            }
+        category ={
+            'actors': list(actors.keys()),
+            'directors': list(directors.keys()),
+            'genres': list(genres.keys())
+        }
+        return{
+            'statusCode': 200,
+            'body': json.dumps(category)
+        }
     
     except Exception as e:
         print('Error Messaaage', e)
