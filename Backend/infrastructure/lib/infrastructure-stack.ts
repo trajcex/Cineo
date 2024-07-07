@@ -105,6 +105,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getPersonalFeed = new lambda.Function(this, "GetPersonalFeed", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getPersonalFeed.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
@@ -154,6 +160,7 @@ export class InfrastructureStack extends cdk.Stack {
         subscribeTopic.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getAllMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         searchMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getPersonalFeed.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
         props.movieBucket.grantPut(this.uploadMovie);
         props.movieBucket.grantPut(getPostUrl);
@@ -166,6 +173,7 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantPublicAccess();
         props.movieBucket.grantRead(getAllMovies);
         props.movieBucket.grantRead(searchMovies);
+        props.movieBucket.grantRead(getPersonalFeed);
 
         const authorizerLayer = new lambda.LayerVersion(this, "AuthorizerLayer", {
             code: lambda.Code.fromAsset(path.join(__dirname, "../layer", "authorizer.zip")),
@@ -217,6 +225,8 @@ export class InfrastructureStack extends cdk.Stack {
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
         const getAllMoviesIntegration = new HttpLambdaIntegration("GetAllMovies", getAllMovies);
         const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
+        const getPersonalFeedIntegration = new HttpLambdaIntegration("GetPersonalFeed", getPersonalFeed);
+
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
             "Unsubscribe",
             unsubscribeTopic
@@ -292,6 +302,12 @@ export class InfrastructureStack extends cdk.Stack {
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
+            path: "/getPersonalFeed",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getPersonalFeedIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
             path: "/unsubscribe",
             methods: [apigatewayv2.HttpMethod.POST],
             integration: unsubscribeTopicIntegration,
@@ -332,6 +348,7 @@ export class InfrastructureStack extends cdk.Stack {
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         getAllMovies.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
+        getPersonalFeed.addEnvironment("MOVIE_TABLE_NAME", table.tableName);
 
         table.addGlobalSecondaryIndex({
             indexName: "GSI1",
@@ -367,7 +384,7 @@ export class InfrastructureStack extends cdk.Stack {
             sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
-
+        table.grantReadData(getPersonalFeed);
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
         table.grantReadData(getMovie);
@@ -403,6 +420,7 @@ export class InfrastructureStack extends cdk.Stack {
         unsubscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         getSubcription.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         messageDispatcher.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+
         tableSubscribeTopic.grantReadData(messageDispatcher);
         tableSubscribeTopic.grantReadWriteData(subscribeTopic);
         tableSubscribeTopic.grantReadWriteData(unsubscribeTopic);
@@ -414,7 +432,25 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
+
         likeMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
+
         tableMovieLike.grantReadWriteData(likeMovie);
+
+
+        const tableFeed = new dynamodb.Table(this, "Feed", {
+            partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "type", type: dynamodb.AttributeType.STRING },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+
+        tableFeed.grantReadWriteData(subscribeTopic);
+        tableFeed.grantReadWriteData(unsubscribeTopic);
+        tableFeed.grantReadWriteData(likeMovie);
+
+        subscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
+        unsubscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
+        likeMovie.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
     }
 }

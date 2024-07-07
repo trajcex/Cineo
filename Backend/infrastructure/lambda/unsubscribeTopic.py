@@ -12,6 +12,8 @@ def handler(event, context):
 
         body = json.loads(event['body'])
         table_name = os.environ['TABLE_NAME']
+        feed_table_name = os.environ['FEED_TABLE_NAME']
+
         topic_name = body['topic'].replace(" ","")+"Topic"
         email = body['email']
 
@@ -52,8 +54,22 @@ def handler(event, context):
             }
         
         table = dynamodb.Table(table_name)
+        feed_table = dynamodb.Table(feed_table_name)
         item = get_existing_item(body['userID'],table)
         
+ 
+        response = feed_table.update_item(
+            Key={
+                'userID': str(body['userID']),
+                 'type': str(body['topic'])
+            },
+            UpdateExpression="ADD weight :inc",
+            ExpressionAttributeValues={
+                ':inc': -10
+            },
+            ReturnValues="UPDATED_NEW"
+        )
+       
         if item :
             return update_item(item,body,table)
         else:

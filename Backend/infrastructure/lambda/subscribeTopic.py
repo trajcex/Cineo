@@ -13,6 +13,8 @@ def handler(event, context):
         body = json.loads(event['body'])
 
         table_name = os.environ['TABLE_NAME']
+        feed_table_name = os.environ['FEED_TABLE_NAME']
+
         topic_name = body['topic'].replace(" ","")+"Topic"
         
         try:
@@ -49,12 +51,35 @@ def handler(event, context):
             }
         
         table = dynamodb.Table(table_name)
+        feed_table = dynamodb.Table(feed_table_name)
+
         item = get_existing_item(body['userID'],table)
+        feed_item = get_existing_item_feed(body['userID'], body['topic'], feed_table)
         
-        if item :
-            return update_item(item,body,table)
+        if feed_item:
+            response = table.update_item(
+                Key={
+                    'userID': str(body['userID']),
+                    'type': str(body['topic'])
+                },
+                UpdateExpression="add weight :inc",
+                ExpressionAttributeValues={
+                    ':inc': 1
+                },
+                ReturnValues="UPDATED_NEW"
+            )
         else:
-            return add_item(body,table)        
+            feed_table.put_item(Item = {
+            'userID': body['userID'],
+            'type': body['topic'],
+            'weight': 10
+            })
+
+        if item :
+            return update_item(item,body,table, feed_table_name)
+        else:
+            return add_item(body,table, feed_table_name)       
+
 
     except Exception as e:
         print('Error Messaaage', e)
@@ -62,7 +87,7 @@ def handler(event, context):
             'statusCode': 500,
             'body': f'Failed to subscribe on topic. {str(e)}'
         }
-    
+
 def get_existing_item(user_id,table):
     try:
         response = table.query(KeyConditionExpression=Key("userID").eq(user_id))
@@ -71,13 +96,22 @@ def get_existing_item(user_id,table):
         print(f"Error getting item with id {user_id}: {str(e)}")
         return None
     
-    
-def update_item(item,body,table):
+def get_existing_item_feed(user_id, topic, table):
+    try:
+        response = table.query(KeyConditionExpression=Key("userID").eq(user_id) & Key('type').eq(topic))
+        return response.get('Items')[0]
+    except Exception as e:
+        print(f"Error getting item with id {user_id}: {str(e)}")
+        return None
+        
+def update_item(item,body,table, feed_table):
     try:
         type = body['type']
         topic = body['topic']
         item[type].append(topic)
         table.put_item(Item=item)
+
+        
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Item updated successfully', 'item': item})
@@ -89,7 +123,7 @@ def update_item(item,body,table):
         }
         
         
-def add_item(body,table):
+def add_item(body,table, feed_table):
     try:
         data = {
             'actors': [],
@@ -111,6 +145,8 @@ def add_item(body,table):
             'genres': data['genres']
         }
         table.put_item(Item=item)
+
+        
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Item added successfully', 'item': item})
