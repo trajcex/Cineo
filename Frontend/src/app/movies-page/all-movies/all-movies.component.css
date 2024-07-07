@@ -70,6 +70,8 @@
   display: inline-block;
   vertical-align: top;
   box-sizing: border-box;
+  cursor: pointer;
+  transition: transform .1s; 
 }
 
 .movie-image {
@@ -86,8 +88,8 @@
 
 
 .movie-card:hover {
-  transform: translateY(-10px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transform: scale(1.03);
+  /* box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); */
 }
 
 .dropdown {
