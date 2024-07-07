@@ -68,6 +68,12 @@ export class ViewMovieComponent {
           console.log(this.movie);
         },
       });
+    this.lambdaService.getLikeMovie(this.id).subscribe({
+      next: (result) => {
+        this.element = result['type'];
+        this.fill = true;
+      },
+    });
   }
 
   onDownload(): void {
