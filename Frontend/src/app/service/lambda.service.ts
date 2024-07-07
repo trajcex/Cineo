@@ -7,8 +7,9 @@ import {
 } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/env/env';
-import { Movie } from '../model/movieInfo';
+import {MovieCard} from "../movies-page/models/movie.model";
 import { AuthServiceService } from './auth-service.service';
+import {Movie} from "../model/movieInfo";
 @Injectable({
   providedIn: 'root',
 })
@@ -20,19 +21,29 @@ export class LambdaService {
 
   public postVideo(body: any): Observable<string> {
     // @ts-ignore
-    return this.http
-      .post(this.url + '/upload', body, {
-        headers: new HttpHeaders({
-          'Content-Type': 'application/json',
-        }),
-        responseType: 'text', // Postavite responseType na 'text' ovde
-        observe: 'response', // Opciono, ako želite pristup celom HttpResponse-u
+    return this.http.post(this.url + '/upload', body, {
+      headers: new HttpHeaders({
+        'Content-Type': 'application/json',
+      }),
+      responseType: 'text', // Postavite responseType na 'text' ovde
+      observe: 'response' // Opciono, ako želite pristup celom HttpResponse-u
+    }).pipe(
+      map((response: HttpResponse<string>) => {
+        return response.body;
       })
-      .pipe(
-        map((response: HttpResponse<string>) => {
-          return response.body;
-        })
-      );
+    );
+  }
+
+  getAllMovies(): Observable<MovieCard[]> {
+    return this.http.get<MovieCard[]>(this.url + '/getAllMovies');
+  }
+
+  searchMovies(search_type: string, search_value: string): Observable<MovieCard[]> {
+    const params = new HttpParams()
+      .set('search_type', search_type)
+      .set('search_value', search_value);
+
+    return this.http.get<MovieCard[]>(`${this.url}/search`, { params });
   }
   getMovie(
     id: string,

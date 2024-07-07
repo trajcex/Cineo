@@ -1,5 +1,6 @@
-export interface Movie {
+export interface MovieCard {
+  id: string;
   title: string;
-  description: string;
-  imageUrl: string;
+  fileName: string;
+  thumbnailUrl: string;
 }

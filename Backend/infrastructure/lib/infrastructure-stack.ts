@@ -108,6 +108,12 @@ export class InfrastructureStack extends cdk.Stack {
             },
             timeout: cdk.Duration.seconds(30),
         });
+        const getAllMovies = new lambda.Function(this, "GetAllMovies", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getAll.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
 
         subscribeTopic.addToRolePolicy(
             new iam.PolicyStatement({
@@ -140,6 +146,8 @@ export class InfrastructureStack extends cdk.Stack {
         downloadMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         deleteMovie.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         subscribeTopic.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getAllMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        searchMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
         props.movieBucket.grantPut(this.uploadMovie);
         props.movieBucket.grantPut(getPostUrl);
@@ -150,6 +158,8 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantDelete(deleteMovie);
         props.movieBucket.grantRead(deleteMovie);
         props.movieBucket.grantPublicAccess();
+        props.movieBucket.grantRead(getAllMovies);
+        props.movieBucket.grantRead(searchMovies);
 
         const authorizerLayer = new lambda.LayerVersion(this, "AuthorizerLayer", {
             code: lambda.Code.fromAsset(path.join(__dirname, "../layer", "authorizer.zip")),
@@ -198,6 +208,7 @@ export class InfrastructureStack extends cdk.Stack {
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
+        const getAllMoviesIntegration = new HttpLambdaIntegration("GetAllMovies", getAllMovies);
         const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
             "Unsubscribe",
@@ -281,6 +292,12 @@ export class InfrastructureStack extends cdk.Stack {
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
+            path: "/getAllMovies",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getAllMoviesIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
             path: "/getPossibleSubcription",
             methods: [apigatewayv2.HttpMethod.GET],
             integration: getPossibleSubcriptionIntegration,
@@ -298,8 +315,10 @@ export class InfrastructureStack extends cdk.Stack {
 
         table.grantWriteData(this.uploadMovie);
         table.grantFullAccess(deleteMovie);
+        table.grantFullAccess(getAllMovies);
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
+        getAllMovies.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
 
         table.addGlobalSecondaryIndex({

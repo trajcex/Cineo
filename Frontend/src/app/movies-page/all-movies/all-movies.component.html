@@ -1,14 +1,27 @@
 <div class="main-container">
   <div class="main">
+    <h1 class="title">Movies</h1>
     <div class="header">
-      <h1 class="title">Movies</h1>
       <h2 *ngIf="role != 'admin'" class="subtitle">My Content</h2>
       <h2 *ngIf="role == 'admin'" class="subtitle">All Content</h2>
+      <div class="search-bar">
+        <div class="dropdown">
+          <select [(ngModel)]="searchType">
+            <option value="title">Title</option>
+            <option value="description">Description</option>
+            <option value="actors">Actors</option>
+            <option value="directors">Directors</option>
+            <option value="genres">Genres</option>
+          </select>
+        </div>
+        <input [(ngModel)]="searchValue" type="text" placeholder="Search...">
+        <button (click)="onSearch()"><mat-icon>search</mat-icon></button>
+      </div>
     </div>
     <div class="movie-grid">
       <div class="movie-card" *ngFor="let movie of movies" [routerLink]="['/view-movie']">
         <div class="movie-image">
-          <img [src]="movie.imageUrl" alt="{{movie.title}}">
+          <img [src]="movie.thumbnailUrl" alt="{{movie.title}}">
         </div>
       </div>
     </div>
