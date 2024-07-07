@@ -1,36 +1,93 @@
 <div id="clip-div">
-    <div id="title">
-        <h2>{{movie?.title}}</h2>
-        <div>
-        <select [(ngModel)]="selectedResolution" (change)="onResolutionChange()">
-            <option value="144">144p</option>
-            <option value="360">360p</option>
-            <option value="480">480p</option>
-            <option value="720">720p</option>
-        </select>
-          
-        </div>
+  <div id="title">
+    <h2>{{ movie?.title }}</h2>
+    <div>
+      <select [(ngModel)]="selectedResolution" (change)="onResolutionChange()">
+        <option value="144">144p</option>
+        <option value="360">360p</option>
+        <option value="480">480p</option>
+        <option value="720">720p</option>
+      </select>
     </div>
-    <div id="video-div">
-        <video width="400" controls src="{{videoBase64}}"></video>
+  </div>
+  <div id="video-div">
+    <video width="400" controls src="{{ videoBase64 }}"></video>
+  </div>
+  <div id="buttons-class">
+    <div class="icons">
+      <i
+        class="bi bi-suit-heart"
+        (click)="setLike('heart', true)"
+        *ngIf="
+          (!fill && element === 'heart') ||
+          element === '' ||
+          element !== 'heart'
+        "
+      ></i>
+      <i
+        class="bi bi-suit-heart-fill"
+        (click)="setLike('heart', false)"
+        *ngIf="fill && element === 'heart'"
+      ></i>
+      <i
+        class="bi bi-hand-thumbs-up"
+        (click)="setLike('like', true)"
+        *ngIf="
+          (!fill && element === 'like') || element === '' || element !== 'like'
+        "
+      ></i>
+      <i
+        class="bi bi-hand-thumbs-up-fill"
+        (click)="setLike('like', false)"
+        *ngIf="fill && element === 'like'"
+      ></i>
+      <i
+        class="bi bi-hand-thumbs-down"
+        (click)="setLike('dislike', true)"
+        *ngIf="
+          (!fill && element === 'dislike') ||
+          element === '' ||
+          element !== 'dislike'
+        "
+      ></i>
+      <i
+        class="bi bi-hand-thumbs-down-fill"
+        (click)="setLike('dislike', false)"
+        *ngIf="fill && element === 'dislike'"
+      ></i>
     </div>
-    <div id="buttons-class">
-        <button class="download-button" [routerLink]="['/change-movie']" [queryParams]="{id: id, fileName: fileName, title: movie?.title, description: movie?.description, actors: movie?.actors, directors:movie?.directors, genres: movie?.genres}">Change</button>
-        <button class="download-button" (click)="onDownload()">Download</button>
-        <button class="delete-button" (click)="onDelete()">Delete Video</button>
+    <div class="buttons">
+      <button
+        class="download-button"
+        [routerLink]="['/change-movie']"
+        [queryParams]="{
+          id: id,
+          fileName: fileName,
+          title: movie?.title,
+          description: movie?.description,
+          actors: movie?.actors,
+          directors: movie?.directors,
+          genres: movie?.genres
+        }"
+      >
+        Change
+      </button>
+      <button class="download-button" (click)="onDownload()">Download</button>
+      <button class="delete-button" (click)="onDelete()">Delete Video</button>
     </div>
-    <div id="movie-info">
-        <h2>Description:</h2>
-        <p>{{movie?.description}}</p>
-        <hr>
-        <div class="div-movie-data">
-            <p>Genres:     {{movie?.genres}}</p>
-        </div>
-        <div class="div-movie-data">
-            <p>Actors:    {{movie?.actors}}</p>
-        </div>
-        <div class="div-movie-data">
-            <p>Directors:   {{movie?.directors}} </p>
-        </div>
+  </div>
+  <div id="movie-info">
+    <h2>Description:</h2>
+    <p>{{ movie?.description }}</p>
+    <hr />
+    <div class="div-movie-data">
+      <p>Genres: {{ movie?.genres }}</p>
     </div>
+    <div class="div-movie-data">
+      <p>Actors: {{ movie?.actors }}</p>
+    </div>
+    <div class="div-movie-data">
+      <p>Directors: {{ movie?.directors }}</p>
+    </div>
+  </div>
 </div>
