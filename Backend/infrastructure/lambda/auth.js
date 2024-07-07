@@ -7,8 +7,10 @@ const mapGroupsToPaths = [
     { path: "GET /preview-url", group: "admin" },
     { path: "GET /download", group: "admin" },
     { path: "DELETE /delete", group: "admin" },
-    { path: "GET /getMovie", group: "admin" },
-    { path: "GET /getMovieUrl", group: "admin" }
+    { path: "GET /getPossibleSubcription", group: "admin" },
+    { path: "GET /getSubscription", group: "admin" },
+    { path: "POST /unsubscribe", group: "admin" },
+    { path: "PUT /subscribe", group: "admin" },
 ];
 
 function generatePolicy(principalId) {
