@@ -122,4 +122,8 @@ export class LambdaService {
   public unsubscribe(body: any): Observable<any> {
     return this.http.post(this.url + '/unsubscribe', body);
   }
+  
+  public likeMovie(body: any): Observable<any> {
+    return this.http.post(this.url + '/likeMovie', body);
+  }
 }
