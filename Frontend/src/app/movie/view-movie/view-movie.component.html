@@ -29,17 +29,17 @@
     <div class="icons">
       <i
         class="bi bi-suit-heart"
-        (click)="setLike('heart', true)"
+        (click)="setLike('love', true)"
         *ngIf="
-          (!fill && element === 'heart') ||
+          (!fill && element === 'love') ||
           element === 'none' ||
-          element !== 'heart'
+          element !== 'love'
         "
       ></i>
       <i
         class="bi bi-suit-heart-fill"
-        (click)="setLike('heart', false)"
-        *ngIf="fill && element === 'heart'"
+        (click)="setLike('love', false)"
+        *ngIf="fill && element === 'love'"
       ></i>
       <i
         class="bi bi-hand-thumbs-up"
