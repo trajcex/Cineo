@@ -1,5 +1,5 @@
 mat-toolbar {
-  background-color: #F6F8FA; /* Sivkasta (grayish) boja */
+  background-color: #171535; /* Sivkasta (grayish) boja */
   height: 60px;
 }
 
@@ -19,7 +19,7 @@ a {
   margin-right: 35px;
   align-self: center;
   text-decoration: none;
-  color: #000;
+  color: #ffffff;
   cursor: pointer;
 }
 
@@ -34,7 +34,7 @@ mat-toolbar ::ng-deep a {
 }
 
 .cineo-text {
-  color: #171535;
+  color: #ffffff;
   font-size: 24px; /* Adjust the font size as needed */
   margin-left: 30px;
   margin-top: 5px;
