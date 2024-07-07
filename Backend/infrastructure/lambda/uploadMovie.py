@@ -30,7 +30,7 @@ def handler(event, context):
         resolution = body.get('resolution', '')
 
         s3_folder_path =  str(movie_id) + "-" +  f"{file_name}/"
-        s3_object_path_video =  s3_folder_path +  f"{resolution}" + ".mp4"
+        s3_object_path_video =  s3_folder_path  + "file.mp4"
         s3_object_path_photo =  s3_folder_path + "thumbnail." + get_image_format(thumbnail)
 
         s3.put_object(

@@ -8,7 +8,9 @@ const mapGroupsToPaths = [
     { path: "GET /download", group: "admin" },
     { path: "DELETE /delete", group: "admin" },
     { path: "GET /getMovie", group: "admin" },
-    { path: "GET /getMovieUrl", group: "admin" }
+    { path: "GET /getMovieUrl", group: "admin" },
+    { path: "PUT /changeMovieData", group: "admin" },
+
 ];
 
 function generatePolicy(principalId) {

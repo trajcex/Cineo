@@ -57,6 +57,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const changeMovieData = new lambda.Function(this, "ChangeMovieData", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "changeMovieData.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const deleteMovie = new lambda.Function(this, "DeleteMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "deleteMovie.handler",
@@ -183,6 +189,7 @@ export class InfrastructureStack extends cdk.Stack {
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
+        const changeMovieDataIntegration = new HttpLambdaIntegration("ChangeMovieDate", changeMovieData);
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
@@ -226,7 +233,12 @@ export class InfrastructureStack extends cdk.Stack {
             integration: getMovieWatchIntegration,
             authorizer: httpAuthorizer,
         });
-
+        this.api.addRoutes({
+            path: "/changeMovieData",
+            methods: [apigatewayv2.HttpMethod.PUT],
+            integration: changeMovieDataIntegration,
+            authorizer: httpAuthorizer,
+        });
         this.api.addRoutes({
             path: "/search",
             methods: [apigatewayv2.HttpMethod.GET],
@@ -313,6 +325,7 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantReadData(getMovie);
         table.grantReadData(getMovieUrl);
         table.grantStreamRead(messageDispatcher);
+        table.grantReadWriteData(changeMovieData);
 
         messageDispatcher.addEventSource(
             new eventsources.DynamoEventSource(table, {
@@ -327,6 +340,7 @@ export class InfrastructureStack extends cdk.Stack {
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
         getMovie.addEnvironment("TABLE_NAME", table.tableName);
         getMovieUrl.addEnvironment("TABLE_NAME", table.tableName);
+        changeMovieData.addEnvironment("TABLE_NAME",table.tableName);
 
         const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {
             partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
