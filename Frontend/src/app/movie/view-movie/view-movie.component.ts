@@ -34,14 +34,14 @@ export class ViewMovieComponent {
     };
     this.element = element;
     this.fill = fill;
-    // this.lambdaService.likeMovie(body).subscribe({
-    //   next: (result) => {
-    //     console.log(result);
-    //   },
-    //   error: () => {
-    //     console.log('Error');
-    //   },
-    // });
+    this.lambdaService.likeMovie(body).subscribe({
+      next: (result) => {
+        console.log(result);
+      },
+      error: () => {
+        console.log('Error');
+      },
+    });
   }
 
   selectedResolution: string = 'file';

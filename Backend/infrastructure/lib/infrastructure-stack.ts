@@ -105,6 +105,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getLikeForMovie = new lambda.Function(this, "GetLikeForMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getLikeForMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
@@ -211,12 +217,19 @@ export class InfrastructureStack extends cdk.Stack {
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
-        const changeMovieDataIntegration = new HttpLambdaIntegration("ChangeMovieDate", changeMovieData);
+        const changeMovieDataIntegration = new HttpLambdaIntegration(
+            "ChangeMovieDate",
+            changeMovieData
+        );
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
         const getAllMoviesIntegration = new HttpLambdaIntegration("GetAllMovies", getAllMovies);
         const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
+        const getLikeForMovieIntegration = new HttpLambdaIntegration(
+            "GetLikeForMovie",
+            getLikeForMovie
+        );
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
             "Unsubscribe",
             unsubscribeTopic
@@ -259,6 +272,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/getMovie",
             methods: [apigatewayv2.HttpMethod.GET],
             integration: getMovieWatchIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/getLikeForMovie",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getLikeForMovieIntegration,
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
@@ -389,7 +408,7 @@ export class InfrastructureStack extends cdk.Stack {
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
         getMovie.addEnvironment("TABLE_NAME", table.tableName);
         getMovieUrl.addEnvironment("TABLE_NAME", table.tableName);
-        changeMovieData.addEnvironment("TABLE_NAME",table.tableName);
+        changeMovieData.addEnvironment("TABLE_NAME", table.tableName);
         getPossibleSubcription.addEnvironment("TABLE_NAME", table.tableName);
 
         const tableSubscribeTopic = new dynamodb.Table(this, "SubscribeTable", {
@@ -415,6 +434,8 @@ export class InfrastructureStack extends cdk.Stack {
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
         likeMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
+        getLikeForMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
         tableMovieLike.grantReadWriteData(likeMovie);
+        tableMovieLike.grantReadData(getLikeForMovie);
     }
 }
