@@ -93,6 +93,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const likeMovie = new lambda.Function(this, "LikeMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "likeMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
@@ -192,6 +198,7 @@ export class InfrastructureStack extends cdk.Stack {
         const searchIntegration = new HttpLambdaIntegration("Search", searchMovies);
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
+        const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
             "Unsubscribe",
             unsubscribeTopic
@@ -253,6 +260,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/subscribe",
             methods: [apigatewayv2.HttpMethod.PUT],
             integration: subscribeTopicIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/likeMovie",
+            methods: [apigatewayv2.HttpMethod.POST],
+            integration: likeMovieIntegration,
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
@@ -361,5 +374,14 @@ export class InfrastructureStack extends cdk.Stack {
         tableSubscribeTopic.grantReadWriteData(subscribeTopic);
         tableSubscribeTopic.grantReadWriteData(unsubscribeTopic);
         tableSubscribeTopic.grantReadData(getSubcription);
+
+        const tableMovieLike = new dynamodb.Table(this, "MovieLikesTable", {
+            partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "movieID", type: dynamodb.AttributeType.STRING },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+        likeMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
+        tableMovieLike.grantReadWriteData(likeMovie);
     }
 }
