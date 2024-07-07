@@ -1,13 +1,19 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders, HttpParams, HttpResponse} from '@angular/common/http';
-import {map, Observable} from 'rxjs';
+import {
+  HttpClient,
+  HttpHeaders,
+  HttpParams,
+  HttpResponse,
+} from '@angular/common/http';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/env/env';
 import {Movie} from "../movies-page/models/movie.model";
+import { AuthServiceService } from './auth-service.service';
 @Injectable({
   providedIn: 'root',
 })
 export class LambdaService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthServiceService) {}
 
   url: string =
     'https://' + environment.apiID + '.execute-api.eu-central-1.amazonaws.com';
@@ -37,5 +43,68 @@ export class LambdaService {
       .set('search_value', search_value);
 
     return this.http.get<Movie[]>(`${this.url}/search`, { params });
+  }
+  getMovie(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/getMovie`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+
+  getMovieUrl(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/getMovieUrl`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+
+  downloadMovie(
+    id: string,
+    fileName: string,
+    resolution: string
+  ): Observable<Movie> {
+    const url = this.url + `/download`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '')
+      .set('resolution', resolution || '');
+    return this.http.get<Movie>(url, { params });
+  }
+  deleteMovie(id: string, fileName: string): Observable<string> {
+    const url = this.url + `/delete`;
+    let params = new HttpParams()
+      .set('file', fileName || '')
+      .set('id', id || '');
+    return this.http.delete<string>(url, { params });
+  }
+
+  public getPossibleSubscriptions(): Observable<any> {
+    return this.http.get(this.url + '/getPossibleSubcription');
+  }
+
+  public getSubscriptions(): Observable<any> {
+    return this.http.get(
+      this.url + '/getSubscription?userID=' + this.auth.getUserID()
+    );
+  }
+
+  public subscribe(body: any): Observable<any> {
+    return this.http.put(this.url + '/subscribe', body);
+  }
+
+  public unsubscribe(body: any): Observable<any> {
+    return this.http.post(this.url + '/unsubscribe', body);
   }
 }

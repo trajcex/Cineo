@@ -1,0 +1,54 @@
+.section {
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+h2 {
+  color: white;
+  text-align: center;
+  font-size: 45px;
+}
+
+ul {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  background: #ecf0f1;
+  margin: 5px 0;
+  padding: 10px;
+  font-size: 24px;
+  border-radius: 4px;
+}
+li:hover {
+  scale: 1.05;
+}
+
+.main-container {
+  background-color: #171535;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px 250px 150px;
+}
+
+.main {
+  background-color: #171535;
+  max-width: 1300px;
+  width: 100%;
+}
+.icon {
+  margin-top: 100px;
+  margin-left: 5px;
+  color: green;
+  font-size: 24px;
+}
+.selected {
+  background-color: rgb(117, 115, 118);
+  color: white;
+}

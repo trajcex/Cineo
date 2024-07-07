@@ -1,5 +1,6 @@
 import boto3
 import os
+import json
 
 def handler(event, context):
     try:
@@ -29,7 +30,7 @@ def handler(event, context):
         )
         return {
             'statusCode': 200,
-            'body': f'Video file {file_name} deleted successfully from S3 bucket.'
+            'body': json.dumps('Video file deleted successfully from S3 bucket.')
         }
     
     except Exception as e:
