@@ -1,0 +1,94 @@
+<div class="main-container">
+  <div class="main">
+    <form [formGroup]="movieData" (ngSubmit)="onSubmit()">
+      <div class="basic-info card">
+        <div class="title">
+          <h1>{{title}}</h1>
+        </div>
+        <div *ngIf="formSubmitted &&  (actors.length === 0 ||  directors.length === 0 )" class="error-message">
+          All fields must be filled in.
+        </div>
+        <div class="inputs-basic-info">
+          <div class="input-field">
+            <label for="title">Title</label>
+            <input id="title"  formControlName="title" type="text" required placeholder="Title">
+            <div *ngIf="formSubmitted && movieData.get('title')?.invalid" class="field-error">
+              Title is required.
+            </div>
+          </div>
+          <div class="input-field">
+            <label for="description">Property description</label>
+            <textarea id="description" formControlName="description" required placeholder="Property description"></textarea>
+            <div *ngIf="formSubmitted && movieData.get('description')?.invalid" class="field-error">
+              Description is required.
+            </div>
+          </div>
+
+          <mat-form-field class="example-chip-list">
+            <mat-label>Actors</mat-label>
+            <mat-chip-grid #chipGridActors aria-label="Enter actors">
+              <mat-chip-row *ngFor="let actor of actors"
+                            (removed)="remove(actor)"
+                            [editable]="true"
+                            (edited)="edit(actor, $event)"
+                            [aria-description]="'Press Enter to edit ' + actor">
+                {{ actor }}
+                <button matChipRemove [attr.aria-label]="'Remove ' + actor">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+              <input placeholder="New actor..."
+                     [matChipInputFor]="chipGridActors"
+                     [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                     [matChipInputAddOnBlur]="addOnBlur"
+                     (matChipInputTokenEnd)="add($event)"/>
+            </mat-chip-grid>
+            <div *ngIf="formSubmitted && actors.length === 0" class="field-error">
+              At least one actor is required.
+            </div>
+          </mat-form-field>
+
+          <mat-form-field class="example-chip-list">
+            <mat-label>Directors</mat-label>
+            <mat-chip-grid #chipGridDirectors aria-label="Enter directors">
+              <mat-chip-row *ngFor="let director of directors"
+                            (removed)="removeDirector(director)"
+                            [editable]="true"
+                            (edited)="editDirector(director, $event)"
+                            [aria-description]="'Press Enter to edit ' + director">
+                {{ director }}
+                <button matChipRemove [attr.aria-label]="'Remove ' + director">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-row>
+              <input placeholder="New director..."
+                     [matChipInputFor]="chipGridDirectors"
+                     [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                     [matChipInputAddOnBlur]="addOnBlur"
+                     (matChipInputTokenEnd)="addDirector($event)"/>
+            </mat-chip-grid>
+            <div *ngIf="formSubmitted && directors.length === 0" class="field-error">
+              At least one director is required.
+            </div>
+          </mat-form-field>
+
+          <mat-form-field class="example-chip-list">
+            <mat-label class="custom-label">Genres</mat-label>
+            <mat-select [(ngModel)] = selectedGenres   formControlName="genres" multiple required>
+              <mat-option *ngFor="let genre of predefinedGenres" [value]="genre">{{ genre }}</mat-option>
+            </mat-select>
+            <div *ngIf="formSubmitted && movieData.get('genres')?.invalid" class="field-error">
+              At least one genre is required.
+            </div>
+          </mat-form-field>
+
+
+        </div>
+        <div class="add-buttons">
+          <button mat-raised-button (click)="onCancel()" id="cancel">Cancel</button>
+          <button mat-raised-button type="submit" id="add">Change</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>

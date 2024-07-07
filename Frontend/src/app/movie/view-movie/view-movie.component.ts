@@ -12,8 +12,8 @@ import { LambdaService } from 'src/app/service/lambda.service';
 export class ViewMovieComponent {
 
   constructor(private lambdaService: LambdaService, private router: Router) {}
-  id : string = "510243da-24aa-421e-ae57-3861ebf8ca2a"
-  fileName: string = "maric"
+  id : string = "68623db8-1c3e-401e-af4c-8635b69ae82c"
+  fileName: string = "neki"
 
 
   selectedResolution: string = 'file'; 
