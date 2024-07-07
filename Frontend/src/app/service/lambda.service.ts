@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import {HttpClient, HttpHeaders, HttpResponse} from '@angular/common/http';
+import {HttpClient, HttpHeaders, HttpParams, HttpResponse} from '@angular/common/http';
 import {map, Observable} from 'rxjs';
 import { environment } from 'src/env/env';
+import {Movie} from "../movies-page/models/movie.model";
 @Injectable({
   providedIn: 'root',
 })
@@ -24,5 +25,17 @@ export class LambdaService {
         return response.body;
       })
     );
+  }
+
+  getAllMovies(): Observable<Movie[]> {
+    return this.http.get<Movie[]>(this.url + '/getAllMovies');
+  }
+
+  searchMovies(search_type: string, search_value: string): Observable<Movie[]> {
+    const params = new HttpParams()
+      .set('search_type', search_type)
+      .set('search_value', search_value);
+
+    return this.http.get<Movie[]>(`${this.url}/search`, { params });
   }
 }
