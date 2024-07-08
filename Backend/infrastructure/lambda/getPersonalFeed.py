@@ -1,24 +1,34 @@
 import json
 import boto3
 import os
+from boto3.dynamodb.conditions import Key, Attr
 
 s3 = boto3.client('s3')
 dynamodb = boto3.resource('dynamodb')
 
 def handler(event, context):
     try:
+        user_id = event['queryStringParameters']['userID']
         movi_table_name = os.environ['MOVIE_TABLE_NAME']
+        feed_table_name = os.environ['FEED_TABLE_NAME']
 
         bucket_name = os.environ['BUCKET_NAME']
         s3_url_base = f"https://{bucket_name}.s3.amazonaws.com/"
 
-        table = dynamodb.Table(movi_table_name)
-        response = table.scan()
+        movie_table = dynamodb.Table(movi_table_name)
+        feed_table =  dynamodb.Table(feed_table_name)
+        
+        feed = get_existing_items(user_id,feed_table)
+        movies =  sorted(feed, key=lambda x: x["weight"], reverse=True)
+        print(movies)
+        response = movie_table.scan()
 
         items = response['Items']
 
         result = []
-        for item in items:
+        for movie in movies:
+            print(movie)
+            item = next(filter(lambda x: x.get("id") == movie["movieID"], items), None)
             movie_id = item['id']
             title = item['title']
             file_name = item['fileName']
@@ -58,3 +68,12 @@ def handler(event, context):
             'statusCode': 500,
             'body': f'Failed to fetch data from DynamoDB. {str(e)}'
         }
+def get_existing_items(user_id, table):
+    try:
+        response = table.query(
+            KeyConditionExpression=Key('userID').eq(user_id)
+        )
+        return response.get('Items')
+    except Exception as e:
+        print(f"Error getting item with id {user_id}: {str(e)}")
+        return None

@@ -19,6 +19,7 @@ const mapGroupsToPaths = [
     { path: "GET /getLikeForMovie", group: "admin" },
     { path: "GET /getMovieContentUrl", group: "admin" },
     { path: "GET /getThumbnailUrl", group: "admin" },
+    { path: "GET /getPersonalFeed", group: "admin" },
 ];
 
 function generatePolicy(principalId) {
