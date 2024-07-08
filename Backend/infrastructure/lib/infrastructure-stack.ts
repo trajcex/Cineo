@@ -10,6 +10,12 @@ import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations
 import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as sfnTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -114,6 +120,12 @@ export class InfrastructureStack extends cdk.Stack {
         const getPersonalFeed = new lambda.Function(this, "GetPersonalFeed", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getPersonalFeed.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const addFeedWeights = new lambda.Function(this, "AddFeedWeights", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "addFeedWeights.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
@@ -464,14 +476,66 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
-
+        tableFeed.grantReadWriteData(getMovieUrl);
         tableFeed.grantReadWriteData(subscribeTopic);
         tableFeed.grantReadWriteData(unsubscribeTopic);
         tableFeed.grantReadWriteData(likeMovie);
+        tableFeed.grantReadWriteData(addFeedWeights);
 
+        getMovieUrl.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         subscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         unsubscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         likeMovie.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
         tableMovieLike.grantReadData(getLikeForMovie);
+        addFeedWeights.addEnvironment("FEED_TABLE_NAME", tableFeed.tableName);
+
+        const map = new sfn.Map(this, 'Map State', {
+            maxConcurrency: 3,
+            itemsPath: sfn.JsonPath.stringAt('$.inputForMap'),
+        });
+
+        const lambdaInvoke = new sfnTasks.LambdaInvoke(this, 'Invoke Lambda ', {
+            lambdaFunction: addFeedWeights,
+            timeout: cdk.Duration.seconds(900),
+        });
+
+        map.itemProcessor(lambdaInvoke);
+
+        const startState = new sfn.Pass(this, 'Start State ');
+
+        const definition = startState.next(map);
+
+        const stateMachine = new sfn.StateMachine(this, 'StateMachineForFeed', {
+            definition: definition,
+            timeout: cdk.Duration.minutes(5),
+        });
+
+        const stepFunctionForFeedInvoker = new lambda.Function(this, "StepFunctionForFeedInvoker", {
+            runtime: lambda.Runtime.PYTHON_3_11,
+            handler: "stepFunctionForFeedInvoker.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const sqsQueue = new sqs.Queue(this, "MyQueue");
+
+        sqsQueue.grantSendMessages(subscribeTopic);
+        subscribeTopic.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+        sqsQueue.grantSendMessages(unsubscribeTopic);
+        unsubscribeTopic.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+        
+        sqsQueue.grantSendMessages(likeMovie);
+        likeMovie.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+        sqsQueue.grantSendMessages(getMovieUrl);
+        getMovieUrl.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+
+        stepFunctionForFeedInvoker.addEnvironment("STATE_MACHINE_ARN", stateMachine.stateMachineArn);
+        stateMachine.grantStartExecution(stepFunctionForFeedInvoker);
+
+        stepFunctionForFeedInvoker.addEventSource(new lambdaEventSources.SqsEventSource(sqsQueue));
+
+
     }
 }
