@@ -34,11 +34,12 @@ def handler(event, context):
                 old_image_format = get_image_format(old_image_data['Body'].read())
 
                 new_image_format = get_image_format(base64.b64decode(thumbnail_base64))
+                new_s3_object_key_photo += new_image_format
 
                 if old_image_format == new_image_format:
                     s3.put_object(
                         Bucket=os.environ['BUCKET_NAME'],
-                        Key=old_image_key,
+                        Key=new_s3_object_key_photo,
                         Body=base64.b64decode(thumbnail_base64)
                     )
                 else:

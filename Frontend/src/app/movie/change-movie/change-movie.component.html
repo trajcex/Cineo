@@ -84,9 +84,6 @@
 
           <div class="imageUpload">
             <app-update-image (imageBase64String)="handleImageBase64($event)"></app-update-image>
-            <div *ngIf="formSubmitted" class="field-error">
-              Image upload is required.
-            </div>
           </div>
         </div>
         <div class="add-buttons">
