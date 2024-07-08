@@ -151,6 +151,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const calculateFeedForMovie = new lambda.Function(this, "calculateFeedForMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "calculateFeedForMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         subscribeTopic.addToRolePolicy(
             new iam.PolicyStatement({
                 actions: ["sns:CreateTopic", "sns:ListTopics", "SNS:Subscribe"],
@@ -271,6 +277,7 @@ export class InfrastructureStack extends cdk.Stack {
             getPossibleSubcription
         );
 
+        calculateFeedForMovie.addEnvironment('USER_POOL_ID',props.userPoolID)
         this.api.addRoutes({
             path: "/upload",
             methods: [apigatewayv2.HttpMethod.POST],
@@ -382,12 +389,15 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantFullAccess(deleteMovie);
         table.grantFullAccess(getAllMovies);
         table.grantReadData(calculateFeed);
+        table.grantReadData(calculateFeedForMovie);
+        table.grantStream(calculateFeedForMovie);
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         getAllMovies.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
         getPersonalFeed.addEnvironment("MOVIE_TABLE_NAME", table.tableName);
         calculateFeed.addEnvironment("TABLE_NAME", table.tableName);
+        calculateFeedForMovie.addEnvironment("TABLE_NAME",table.tableName);
 
         table.addGlobalSecondaryIndex({
             indexName: "GSI1",
@@ -442,6 +452,18 @@ export class InfrastructureStack extends cdk.Stack {
             })
         );
 
+        calculateFeedForMovie.addEventSource(
+            new eventsources.DynamoEventSource(table, {
+                startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+                batchSize: 5,
+                bisectBatchOnError: true,
+                retryAttempts: 10,
+            })
+        );
+        calculateFeedForMovie.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['cognito-idp:ListUsers'],
+            resources: ['*']
+        }));
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
         getMovie.addEnvironment("TABLE_NAME", table.tableName);
@@ -493,6 +515,7 @@ export class InfrastructureStack extends cdk.Stack {
         tableFeedWeights.grantReadWriteData(likeMovie);
         tableFeedWeights.grantReadWriteData(addFeedWeights);
         tableFeedWeights.grantReadWriteData(calculateFeed);
+        tableFeedWeights.grantReadData(calculateFeedForMovie);
 
         getMovieUrl.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
         subscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
@@ -501,6 +524,7 @@ export class InfrastructureStack extends cdk.Stack {
         tableMovieLike.grantReadData(getLikeForMovie);
         addFeedWeights.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
         calculateFeed.addEnvironment("FEED_WEIGHTS_TABLE_NAME", tableFeedWeights.tableName);
+        calculateFeedForMovie.addEnvironment("FEED_WEIGHTS_TABLE_NAME", tableFeedWeights.tableName);
 
         calculateFeed.addEventSource(
             new eventsources.DynamoEventSource(tableFeedWeights, {
@@ -517,6 +541,8 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
+        tableFeed.grantWriteData(calculateFeedForMovie);
+        calculateFeedForMovie.addEnvironment("FEED_TABLE_NAME",tableFeed.tableName);
         tableFeed.grantFullAccess(calculateFeed)
         calculateFeed.addEnvironment("FEED_TABLE_NAME",tableFeed.tableName);
         tableFeed.grantReadData(getPersonalFeed);
