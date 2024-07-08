@@ -1,0 +1,81 @@
+.custom-dropzone {
+  background-color: #EDF7FF;
+  padding: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+}
+
+.dropzone-image {
+  max-width: 100%;
+  max-height: 100%;
+  margin: 0 auto;
+  display: block;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.image-container {
+  display: flex;
+  justify-content: flex-start; /* Align images to the left */
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.image-wrapper {
+  position: relative;
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.preview-image {
+  width: 200px;
+  height: auto;
+  border-radius: 15px;
+  padding: 10px;
+  margin-bottom: 10px;
+  object-fit: cover;
+}
+
+.delete-icon {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  cursor: pointer;
+  color: white;
+  background-color: transparent;
+  border: none;
+  outline: none;
+}
+
+.validateMessage p {
+  color: #BA1A1A;
+}
+.delete-icon-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  cursor: pointer;
+  opacity: 1;
+}
+
+.delete-icon {
+  font-size: 24px;
+  color: red;
+}
+
+.delete-icon:hover {
+  transform: scale(1.2);
+}
+
+.container h5 {
+  margin-top: 25px;
+  margin-bottom: 15px;
+}
+
+

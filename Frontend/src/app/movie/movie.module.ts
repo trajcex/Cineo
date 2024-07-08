@@ -13,6 +13,7 @@ import {MaterialModule} from "../infrastructure/material/material.module";
 import { ImageUploadComponent } from './image-upload/image-upload.component';
 import { ChangeMovieComponent } from './change-movie/change-movie.component';
 import { RouterModule } from '@angular/router';
+import { UpdateImageComponent } from './update-image/update-image.component';
 
 
 
@@ -22,7 +23,8 @@ import { RouterModule } from '@angular/router';
     ViewMovieComponent,
     VideoUploadComponent,
     ImageUploadComponent,
-    ChangeMovieComponent
+    ChangeMovieComponent,
+    UpdateImageComponent
   ],
     imports: [
         CommonModule,

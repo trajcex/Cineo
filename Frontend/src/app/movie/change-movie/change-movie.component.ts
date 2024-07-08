@@ -17,7 +17,7 @@ export class ChangeMovieComponent {
   fb = inject(FormBuilder);
 
   constructor(private lambdaService: LambdaService, private router: Router,private announcer: LiveAnnouncer,private route: ActivatedRoute) {}
-  
+
   id : string = "";
   fileName: string = "";
 
@@ -26,6 +26,8 @@ export class ChangeMovieComponent {
   genres: string[] | undefined;
   directors: string[] = [];
   preDefinedTitle: string = "";
+  receivedImageBase64: string = '';
+
 
   movieData = this.fb.group({
     title: ['', Validators.required],
@@ -40,17 +42,20 @@ export class ChangeMovieComponent {
         console.log(this.id, this.fileName);
         this.actors = params['actors'];
         this.directors = params['directors'];
-        
         this.movieData = this.fb.group({
           title: [params['title'], Validators.required],
           description: [params['description'], Validators.required],
           genres: [params['genres']]
-        });        
+        });
         this.selectedGenres = params['genres'][0].split(',').map((genre: string) => genre.trim());
         }
       );
   }
 
+  handleImageBase64(base64String: string) {
+    console.log('Received Base64 image in parent component:', base64String);
+    this.receivedImageBase64 = base64String;
+  }
 
   addOnBlur = true;
   readonly separatorKeysCodes = [ENTER, COMMA];
@@ -144,7 +149,7 @@ export class ChangeMovieComponent {
     }
 
     // @ts-ignore
-    if (this.actors.length === 0 || this.directors.length === 0 || this.movieData.value.genres.length === 0) {
+    if (this.actors.length === 0 || this.directors.length === 0 || this.movieData.value.genres.length === 0 || this.receivedImageBase64 === '') {
       return;
     }
 
@@ -154,17 +159,18 @@ export class ChangeMovieComponent {
       actors: this.actors,
       directors: this.directors,
       genres: this.movieData.value.genres,
+      thumbnailBase64: this.receivedImageBase64
     };
 
     console.log('Submitting:', body);
 
-    this.lambdaService.changeMovie(this.id, body.directors || [], body.actors || [], body.genres || [], body.title || "", body.description || "").subscribe({
+    this.lambdaService.changeMovie(this.id, body.directors || [], body.actors || [], body.genres || [], body.title || "", body.description || "", body.thumbnailBase64 || "", this.fileName).subscribe({
       next:(message: string) => {
-        
+
         console.log(message);
         this.router.navigate(['/view-movie'], { queryParams: {id: this.id, fileName: this.fileName} });
       }
     })
-    
+
   }
 }

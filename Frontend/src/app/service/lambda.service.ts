@@ -106,7 +106,9 @@ export class LambdaService {
     actors: string[],
     genres: string[],
     title: string,
-    description: string
+    description: string,
+    thumbnailBase64: string,
+    fileName: string
   ): Observable<string> {
     const url = this.url + `/changeMovieData`;
     let params = new HttpParams().set('id', id || '');
@@ -117,6 +119,8 @@ export class LambdaService {
       genres: genres,
       title: title,
       description: description,
+      thumbnailBase64: thumbnailBase64,
+      fileName: fileName
     };
     return this.http.put<string>(url, { body }, { params });
   }
@@ -149,6 +153,15 @@ export class LambdaService {
         userID: this.auth.getUserID(),
         movieID: movieID,
       },
+    });
+  }
+
+  public getThumbnailUrl(id: string, fileName: string): Observable<any> {
+    return this.http.get(`${this.url}/getThumbnailUrl`, {
+      params: {
+        id: id,
+        fileName: fileName
+      }
     });
   }
 }
