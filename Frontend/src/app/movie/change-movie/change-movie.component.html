@@ -5,7 +5,7 @@
         <div class="title">
           <h1>{{title}}</h1>
         </div>
-        <div *ngIf="formSubmitted &&  (actors.length === 0 ||  directors.length === 0 || receivedImageBase64 === '' )" class="error-message">
+        <div *ngIf="formSubmitted &&  (actors.length === 0 ||  directors.length === 0 )" class="error-message">
           All fields must be filled in.
         </div>
         <div class="inputs-basic-info">
@@ -84,7 +84,7 @@
 
           <div class="imageUpload">
             <app-update-image (imageBase64String)="handleImageBase64($event)"></app-update-image>
-            <div *ngIf="formSubmitted && receivedImageBase64 === ''" class="field-error">
+            <div *ngIf="formSubmitted" class="field-error">
               Image upload is required.
             </div>
           </div>
