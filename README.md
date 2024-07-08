@@ -30,36 +30,20 @@ cd infrastructure-name
 cdk init app --language typescript
 ```
 
-**CDK needs to be updated each time a deployment has to be made.**
+Deploy stack
 
 ```shell
-# Check for outdated files
-npm outdated
-# Update npm
-npm update
-# aws cdk global update
-npm install -g aws-cdk
-```
-
-Infrastructure has to be bootstraped and uploaded to shared S3 bucket
-
-```shell
-cdk bootstrap
-# For defining a specific profile
-cdk bootstrap --profile default
-```
-
-Synthesize and deploy the stack
-
-```shell
-# StackName is the string id passed trough *-stack.ts constructor
-cdk synth StackName
 cdk deploy StackName
 ```
 
-Destroying the stack
+Destroy stack
 
 ```shell
 cdk destroy StackName
 ```
 
+Deploy Frontend
+
+```shell
+ng build; npm run aws-deploy
+```
