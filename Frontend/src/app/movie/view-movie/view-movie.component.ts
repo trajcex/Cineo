@@ -63,9 +63,9 @@ export class ViewMovieComponent {
       .subscribe({
         next: (movie: Movie) => {
           this.movie = movie;
-          // this.videoBase64 = movie.video_content;
-          this.movie.video_content = movie.video_content?.slice(2, -1);
-          this.videoBase64 = this.base64 + this.movie.video_content;
+          this.videoBase64 = movie.video_content || "";
+          // this.movie.video_content = movie.video_content?.slice(2, -1);
+          // this.videoBase64 = this.base64 + this.movie.video_content;
           console.log(this.movie);
         },
       });
@@ -128,8 +128,9 @@ export class ViewMovieComponent {
       .getMovie(this.id, this.fileName, this.selectedResolution)
       .subscribe({
         next: (movie: Movie) => {
-          movie.video_content = movie.video_content?.slice(2, -1);
-          this.videoBase64 = this.base64 + movie.video_content;
+          // movie.video_content = movie.video_content?.slice(2, -1);
+          // this.videoBase64 = this.base64 + movie.video_content;
+          this.videoBase64 = movie.video_content || "";
           console.log(this.movie);
         },
       });
