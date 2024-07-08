@@ -10,6 +10,13 @@ import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations
 import * as lambdaAuthorizers from "aws-cdk-lib/aws-apigatewayv2-authorizers";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as eventsources from "aws-cdk-lib/aws-lambda-event-sources";
+import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
+import * as sfnTasks from 'aws-cdk-lib/aws-stepfunctions-tasks';
+import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as s3n from 'aws-cdk-lib/aws-s3-notifications';
+import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
+import { randomBytes } from "crypto";
+
 
 interface InfrastructureStackProps extends cdk.StackProps {
     bucketName: string;
@@ -111,6 +118,18 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getPersonalFeed = new lambda.Function(this, "GetPersonalFeed", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getPersonalFeed.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const addFeedWeights = new lambda.Function(this, "AddFeedWeights", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "addFeedWeights.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const searchMovies = new lambda.Function(this, "SearchMovie", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "searchMovie.handler",
@@ -126,7 +145,18 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
-        
+        const calculateFeed = new lambda.Function(this, "CalculateFeed", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "calculateFeed.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const calculateFeedForMovie = new lambda.Function(this, "calculateFeedForMovie", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "calculateFeedForMovie.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });        
         const getThumbnailUrl = new lambda.Function(this, "GetThumbnailUrl", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getThumbnailUrl.handler",
@@ -167,6 +197,7 @@ export class InfrastructureStack extends cdk.Stack {
         subscribeTopic.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getAllMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         searchMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getPersonalFeed.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getThumbnailUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         changeMovieData.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
@@ -181,6 +212,7 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantPublicAccess();
         props.movieBucket.grantRead(getAllMovies);
         props.movieBucket.grantRead(searchMovies);
+        props.movieBucket.grantRead(getPersonalFeed);
         props.movieBucket.grantRead(getThumbnailUrl);
         props.movieBucket.grantPut(changeMovieData);
         props.movieBucket.grantDelete(changeMovieData);
@@ -244,6 +276,8 @@ export class InfrastructureStack extends cdk.Stack {
             "GetLikeForMovie",
             getLikeForMovie
         );
+        const getPersonalFeedIntegration = new HttpLambdaIntegration("GetPersonalFeed", getPersonalFeed);
+
         const unsubscribeTopicIntegration = new HttpLambdaIntegration(
             "Unsubscribe",
             unsubscribeTopic
@@ -257,6 +291,7 @@ export class InfrastructureStack extends cdk.Stack {
             getPossibleSubcription
         );
 
+        calculateFeedForMovie.addEnvironment('USER_POOL_ID',props.userPoolID)
         this.api.addRoutes({
             path: "/upload",
             methods: [apigatewayv2.HttpMethod.POST],
@@ -325,6 +360,12 @@ export class InfrastructureStack extends cdk.Stack {
             authorizer: httpAuthorizer,
         });
         this.api.addRoutes({
+            path: "/getPersonalFeed",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getPersonalFeedIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
             path: "/unsubscribe",
             methods: [apigatewayv2.HttpMethod.POST],
             integration: unsubscribeTopicIntegration,
@@ -367,10 +408,16 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantWriteData(this.uploadMovie);
         table.grantFullAccess(deleteMovie);
         table.grantFullAccess(getAllMovies);
+        table.grantReadData(calculateFeed);
+        table.grantReadData(calculateFeedForMovie);
+        table.grantStream(calculateFeedForMovie);
 
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         getAllMovies.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
+        getPersonalFeed.addEnvironment("MOVIE_TABLE_NAME", table.tableName);
+        calculateFeed.addEnvironment("TABLE_NAME", table.tableName);
+        calculateFeedForMovie.addEnvironment("TABLE_NAME",table.tableName);
 
         table.addGlobalSecondaryIndex({
             indexName: "GSI1",
@@ -406,7 +453,7 @@ export class InfrastructureStack extends cdk.Stack {
             sortKey: { name: "title", type: dynamodb.AttributeType.STRING },
             projectionType: dynamodb.ProjectionType.ALL,
         });
-
+        table.grantReadData(getPersonalFeed);
         table.grantFullAccess(searchMovies);
         table.grantWriteData(this.uploadMovie);
         table.grantReadData(getMovie);
@@ -414,6 +461,7 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantStreamRead(messageDispatcher);
         table.grantReadWriteData(changeMovieData);
         table.grantReadData(getPossibleSubcription);
+        table.grantReadData(calculateFeed);
 
         messageDispatcher.addEventSource(
             new eventsources.DynamoEventSource(table, {
@@ -424,6 +472,18 @@ export class InfrastructureStack extends cdk.Stack {
             })
         );
 
+        calculateFeedForMovie.addEventSource(
+            new eventsources.DynamoEventSource(table, {
+                startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+                batchSize: 5,
+                bisectBatchOnError: true,
+                retryAttempts: 10,
+            })
+        );
+        calculateFeedForMovie.addToRolePolicy(new iam.PolicyStatement({
+            actions: ['cognito-idp:ListUsers'],
+            resources: ['*']
+        }));
         this.uploadMovie.addEnvironment("TABLE_NAME", table.tableName);
         searchMovies.addEnvironment("TABLE_NAME", table.tableName);
         getMovie.addEnvironment("TABLE_NAME", table.tableName);
@@ -442,6 +502,7 @@ export class InfrastructureStack extends cdk.Stack {
         unsubscribeTopic.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         getSubcription.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
         messageDispatcher.addEnvironment("TABLE_NAME", tableSubscribeTopic.tableName);
+
         tableSubscribeTopic.grantReadData(messageDispatcher);
         tableSubscribeTopic.grantReadWriteData(subscribeTopic);
         tableSubscribeTopic.grantReadWriteData(unsubscribeTopic);
@@ -453,9 +514,107 @@ export class InfrastructureStack extends cdk.Stack {
             removalPolicy: cdk.RemovalPolicy.DESTROY,
             billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         });
+
         likeMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
         getLikeForMovie.addEnvironment("TABLE_NAME", tableMovieLike.tableName);
+
         tableMovieLike.grantReadWriteData(likeMovie);
+
+
+        const tableFeedWeights = new dynamodb.Table(this, "FeedWeights", {
+            partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "type", type: dynamodb.AttributeType.STRING },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+            stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES
+        });
+        tableFeedWeights.grantStreamRead(calculateFeed);
+        tableFeedWeights.grantReadWriteData(getMovieUrl);
+        tableFeedWeights.grantReadWriteData(subscribeTopic);
+        tableFeedWeights.grantReadWriteData(unsubscribeTopic);
+        tableFeedWeights.grantReadWriteData(likeMovie);
+        tableFeedWeights.grantReadWriteData(addFeedWeights);
+        tableFeedWeights.grantReadWriteData(calculateFeed);
+        tableFeedWeights.grantReadData(calculateFeedForMovie);
+
+        getMovieUrl.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
+        subscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
+        unsubscribeTopic.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
+        likeMovie.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
         tableMovieLike.grantReadData(getLikeForMovie);
+        addFeedWeights.addEnvironment("FEED_TABLE_NAME", tableFeedWeights.tableName);
+        calculateFeed.addEnvironment("FEED_WEIGHTS_TABLE_NAME", tableFeedWeights.tableName);
+        calculateFeedForMovie.addEnvironment("FEED_WEIGHTS_TABLE_NAME", tableFeedWeights.tableName);
+
+        calculateFeed.addEventSource(
+            new eventsources.DynamoEventSource(tableFeedWeights, {
+                startingPosition: lambda.StartingPosition.TRIM_HORIZON,
+                batchSize: 5,
+                bisectBatchOnError: true,
+                retryAttempts: 10,
+            })
+        );
+
+        const tableFeed = new dynamodb.Table(this, "Feed", {
+            partitionKey: { name: "userID", type: dynamodb.AttributeType.STRING },
+            sortKey: { name: "movieID", type: dynamodb.AttributeType.STRING },
+            removalPolicy: cdk.RemovalPolicy.DESTROY,
+            billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        });
+        tableFeed.grantWriteData(calculateFeedForMovie);
+        calculateFeedForMovie.addEnvironment("FEED_TABLE_NAME",tableFeed.tableName);
+        tableFeed.grantFullAccess(calculateFeed)
+        calculateFeed.addEnvironment("FEED_TABLE_NAME",tableFeed.tableName);
+        tableFeed.grantReadData(getPersonalFeed);
+        getPersonalFeed.addEnvironment("FEED_TABLE_NAME",tableFeed.tableName);
+
+        const map = new sfn.Map(this, 'Map State', {
+            maxConcurrency: 3,
+            itemsPath: sfn.JsonPath.stringAt('$.inputForMap'),
+        });
+
+        const lambdaInvoke = new sfnTasks.LambdaInvoke(this, 'Invoke Lambda ', {
+            lambdaFunction: addFeedWeights,
+            timeout: cdk.Duration.seconds(900),
+        });
+
+        map.itemProcessor(lambdaInvoke);
+
+        const startState = new sfn.Pass(this, 'Start State ');
+
+        const definition = startState.next(map);
+
+        const stateMachine = new sfn.StateMachine(this, 'StateMachineForFeed', {
+            definition: definition,
+            timeout: cdk.Duration.minutes(5),
+        });
+
+        const stepFunctionForFeedInvoker = new lambda.Function(this, "StepFunctionForFeedInvoker", {
+            runtime: lambda.Runtime.PYTHON_3_11,
+            handler: "stepFunctionForFeedInvoker.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
+        const sqsQueue = new sqs.Queue(this, "MyQueue");
+
+        sqsQueue.grantSendMessages(subscribeTopic);
+        subscribeTopic.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+        sqsQueue.grantSendMessages(unsubscribeTopic);
+        unsubscribeTopic.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+        
+        sqsQueue.grantSendMessages(likeMovie);
+        likeMovie.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+        sqsQueue.grantSendMessages(getMovieUrl);
+        getMovieUrl.addEnvironment("QUEUE_URL",sqsQueue.queueUrl);
+
+
+        stepFunctionForFeedInvoker.addEnvironment("STATE_MACHINE_ARN", stateMachine.stateMachineArn);
+        stateMachine.grantStartExecution(stepFunctionForFeedInvoker);
+
+        stepFunctionForFeedInvoker.addEventSource(new lambdaEventSources.SqsEventSource(sqsQueue));
+
+
     }
 }

@@ -66,13 +66,18 @@ export class LambdaService {
   getMovieUrl(
     id: string,
     fileName: string,
-    resolution: string
+    resolution: string,
+    genres: string[],
+    userID: string
   ): Observable<Movie> {
     const url = this.url + `/getMovieUrl`;
     let params = new HttpParams()
       .set('file', fileName || '')
       .set('id', id || '')
-      .set('resolution', resolution || '');
+      .set('resolution', resolution || '')
+      .set('genres', genres.join(',') || '')
+      .set('userID', userID || '')
+      ;
     return this.http.get<Movie>(url, { params });
   }
 
@@ -150,6 +155,11 @@ export class LambdaService {
       },
     });
   }
+
+  public getFeed(): Observable<MovieCard[]> {
+    return this.http.get<MovieCard[]>(this.url + '/getPersonalFeed?userID='+this.auth.getUserID());
+  }
+
 
   public getThumbnailUrl(id: string, fileName: string): Observable<any> {
     return this.http.get(`${this.url}/getThumbnailUrl`, {

@@ -6,12 +6,19 @@ from boto3.dynamodb.conditions import Key, Attr
 
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
+sqs = boto3.client('sqs')
+
 
 def handler(event, context):
     try:
 
         body = json.loads(event['body'])
         table_name = os.environ['TABLE_NAME']
+        feed_table_name = os.environ['FEED_TABLE_NAME']
+        userID = str(body['userID'])
+        queue_url = os.environ['QUEUE_URL']
+
+
         topic_name = body['topic'].replace(" ","")+"Topic"
         email = body['email']
 
@@ -52,8 +59,20 @@ def handler(event, context):
             }
         
         table = dynamodb.Table(table_name)
+        feed_table = dynamodb.Table(feed_table_name)
         item = get_existing_item(body['userID'],table)
         
+ 
+        input_data = [{
+            'userID': str(body['userID']),
+            'topic': str(body['topic']),
+            'weight': -10
+        }]
+        sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps({'inputForMap': input_data})
+        )
+       
         if item :
             return update_item(item,body,table)
         else:

@@ -55,7 +55,7 @@ button {
 #movie-info {
   display: flex;
   flex-direction: column;
-  width: 50%;
+  width: 100%;
 }
 .div-movie-data {
   display: flex;
@@ -101,4 +101,9 @@ option {
 }
 i:hover {
   scale: 1.3;
+}
+#movie-info-top{
+  display: flex;
+  flex-direction: column;
+  width: 50%;
 }

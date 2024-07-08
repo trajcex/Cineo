@@ -6,13 +6,17 @@ from boto3.dynamodb.conditions import Key, Attr
 
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
+sqs = boto3.client('sqs')
 
 def handler(event, context):
     try:
 
         body = json.loads(event['body'])
-
         table_name = os.environ['TABLE_NAME']
+        feed_table_name = os.environ['FEED_TABLE_NAME']
+        queue_url = os.environ['QUEUE_URL']
+
+
         topic_name = body['topic'].replace(" ","")+"Topic"
         
         try:
@@ -49,12 +53,25 @@ def handler(event, context):
             }
         
         table = dynamodb.Table(table_name)
+        feed_table = dynamodb.Table(feed_table_name)
+
         item = get_existing_item(body['userID'],table)
-        
+
+        input_data = [{
+            'userID': str(body['userID']),
+            'topic': str(body['topic']),
+            'weight': 10
+        }]
+        sqs.send_message(
+            QueueUrl=queue_url,
+            MessageBody=json.dumps({'inputForMap': input_data})
+        )
+
         if item :
-            return update_item(item,body,table)
+            return update_item(item,body,table, feed_table_name)
         else:
-            return add_item(body,table)        
+            return add_item(body,table, feed_table_name)       
+
 
     except Exception as e:
         print('Error Messaaage', e)
@@ -62,7 +79,7 @@ def handler(event, context):
             'statusCode': 500,
             'body': f'Failed to subscribe on topic. {str(e)}'
         }
-    
+
 def get_existing_item(user_id,table):
     try:
         response = table.query(KeyConditionExpression=Key("userID").eq(user_id))
@@ -71,13 +88,22 @@ def get_existing_item(user_id,table):
         print(f"Error getting item with id {user_id}: {str(e)}")
         return None
     
-    
-def update_item(item,body,table):
+def get_existing_item_feed(user_id, topic, table):
+    try:
+        response = table.query(KeyConditionExpression=Key("userID").eq(user_id) & Key('type').eq(topic))
+        return response.get('Items')[0]
+    except Exception as e:
+        print(f"Error getting item with id {user_id}: {str(e)}")
+        return None
+        
+def update_item(item,body,table, feed_table):
     try:
         type = body['type']
         topic = body['topic']
         item[type].append(topic)
         table.put_item(Item=item)
+
+        
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Item updated successfully', 'item': item})
@@ -89,7 +115,7 @@ def update_item(item,body,table):
         }
         
         
-def add_item(body,table):
+def add_item(body,table, feed_table):
     try:
         data = {
             'actors': [],
@@ -111,6 +137,8 @@ def add_item(body,table):
             'genres': data['genres']
         }
         table.put_item(Item=item)
+
+        
         return {
             'statusCode': 200,
             'body': json.dumps({'message': 'Item added successfully', 'item': item})
