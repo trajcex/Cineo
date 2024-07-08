@@ -151,4 +151,9 @@ export class LambdaService {
       },
     });
   }
+
+  public getFeed(): Observable<MovieCard[]> {
+    return this.http.get<MovieCard[]>(this.url + '/getPersonalFeed?userID='+this.auth.getUserID());
+  }
+
 }

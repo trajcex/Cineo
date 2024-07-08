@@ -8,7 +8,7 @@ dynamodb = boto3.resource('dynamodb')
 
 def handler(event, context):
     try:
-        user_id = event.get('userID')
+        user_id = event['queryStringParameters']['userID']
         movi_table_name = os.environ['MOVIE_TABLE_NAME']
         feed_table_name = os.environ['FEED_TABLE_NAME']
 

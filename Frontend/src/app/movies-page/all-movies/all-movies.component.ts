@@ -23,9 +23,22 @@ export class AllMoviesComponent {
   }
 
   loadAllMovies() {
-    this.lambdaService.getAllMovies().subscribe({
+    this.lambdaService.getFeed().subscribe({
       next: (data: MovieCard[]) => {
-        this.movies = data;
+        if (data.length === 0){
+          this.lambdaService.getAllMovies().subscribe({
+            next: (data: MovieCard[]) => {
+              this.movies = data;
+              console.log("GetAll:", this.movies);
+            },
+            error: (error) => {
+              console.error('Error fetching movies', error);
+            }
+          });
+        }else{
+          this.movies = data;
+        }
+        
         console.log(this.movies);
       },
       error: (error) => {
