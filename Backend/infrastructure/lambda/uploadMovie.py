@@ -43,7 +43,7 @@ def handler(event, context):
             Key=s3_object_path_photo, 
             Body=thumbnail)    
 
-        file_type = body.get('file_type', 'unknown')
+        file_type = 'video/mp4'
         file_size = int(len(file_content) // 4 * 3 // 1024)
         
         title = body.get('title', '')
