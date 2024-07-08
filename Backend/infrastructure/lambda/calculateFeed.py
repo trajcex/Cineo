@@ -28,7 +28,7 @@ def handler(event, context):
         user_id = new_image.get('userID')['S']
         
         response = get_existing_item(user_id, feed_weights_table)
-        value = {item['type']:item['weight'] for item in response} 
+        value = {item['type'].replace(" ",""):item['weight'] for item in response} 
         print(value) 
         
         add_weight(feed_table, user_id,parse_data,value)

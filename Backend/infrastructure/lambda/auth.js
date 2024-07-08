@@ -1,24 +1,25 @@
 const { CognitoJwtVerifier } = require("aws-jwt-verify");
 
 const mapGroupsToPaths = [
-    { path: "GET /getMovieUrl", group: "admin" },
-    { path: "GET /getPostUrl", group: "admin" },
-    { path: "POST /upload", group: "admin" },
-    { path: "GET /preview-url", group: "admin" },
-    { path: "GET /download", group: "admin" },
-    { path: "DELETE /delete", group: "admin" },
-    { path: "GET /getMovie", group: "admin" },
-    { path: "GET /getMovieUrl", group: "admin" },
-    { path: "PUT /changeMovieData", group: "admin" },
-    { path: "GET /getPossibleSubcription", group: "admin" },
-    { path: "GET /getSubscription", group: "admin" },
-    { path: "POST /unsubscribe", group: "admin" },
-    { path: "PUT /subscribe", group: "admin" },
-    { path: "GET /getAllMovies", group: "admin" },
-    { path: "POST /likeMovie", group: "admin" },
-    { path: "GET /getLikeForMovie", group: "admin" },
-    { path: "GET /getThumbnailUrl", group: "admin" },
-    { path: "GET /getPersonalFeed", group: "admin" },
+    { path: "GET /getMovieUrl", group: ["admin", "guest"]},
+    { path: "GET /getPostUrl", group: ["admin"] },
+    { path: "POST /upload", group: ["admin"] },
+    { path: "GET /preview-url", group: ["admin"] },
+    { path: "GET /download", group: ["admin", "guest"] },
+    { path: "DELETE /delete", group: ["admin"] },
+    { path: "GET /getMovie", group: ["admin", "guest"] },
+    { path: "GET /getMovieUrl", group: ["admin", "guest"] },
+    { path: "PUT /changeMovieData", group: ["admin"] },
+    { path: "GET /getPossibleSubcription", group: ["guest"] },
+    { path: "GET /getSubscription", group: ["guest"] },
+    { path: "POST /unsubscribe", group: ["guest"] },
+    { path: "PUT /subscribe", group: ["guest"] },
+    { path: "GET /getAllMovies", group: ["admin", "guest"] },
+    { path: "POST /likeMovie", group: ["guest"] },
+    { path: "GET /getLikeForMovie", group: ["guest"] },
+    { path: "GET /getMovieContentUrl", group: ["admin","guest"] },
+    { path: "GET /getThumbnailUrl", group: ["admin"] },
+    { path: "GET /getPersonalFeed", group: ["guest","admin"] },
 ];
 
 function generatePolicy(principalId) {
@@ -83,11 +84,17 @@ exports.handler = async function (event) {
 
     const matchingPathConfig = mapGroupsToPaths.find((config) => requestPath === config.path);
     const userGroups = payload["cognito:groups"];
-    if (userGroups.includes(matchingPathConfig.group)) {
-        console.log("GOOOOOOOOOOD!");
-        console.log(generatePolicy(payload.sub));
-        return generatePolicy(payload.sub);
+    for (const element of userGroups) {
+        for (const group of matchingPathConfig.group) {
+            if (element == group) {
+                return generatePolicy(payload.sub);
+            }
+        }
     }
+    // if (userGroups.includes(matchingPathConfig.group)) {
+    //     console.log(generatePolicy(payload.sub));
+    //     return generatePolicy(payload.sub);
+    // }
 
     return {
         statusCode: 403,

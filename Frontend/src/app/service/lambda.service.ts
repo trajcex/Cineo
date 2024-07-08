@@ -55,7 +55,7 @@ export class LambdaService {
     fileName: string,
     resolution: string
   ): Observable<Movie> {
-    const url = this.url + `/getMovie`;
+    const url = this.url + `/getMovieContentUrl`;
     let params = new HttpParams()
       .set('file', fileName || '')
       .set('id', id || '')

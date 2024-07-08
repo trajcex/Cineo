@@ -58,6 +58,12 @@ export class InfrastructureStack extends cdk.Stack {
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
         });
+        const getMovieContentUrl = new lambda.Function(this, "GetMovieContentUrl", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getMovieContentUrl.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
+        });
         const getPostUrl = new lambda.Function(this, "GetPostUrl", {
             runtime: lambda.Runtime.PYTHON_3_9,
             handler: "getPostUrl.handler",
@@ -198,6 +204,7 @@ export class InfrastructureStack extends cdk.Stack {
         getAllMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         searchMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getPersonalFeed.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getMovieContentUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getThumbnailUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         changeMovieData.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
@@ -205,6 +212,7 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantPut(getPostUrl);
         props.movieBucket.grantRead(getMovie);
         props.movieBucket.grantRead(getMovieUrl);
+        props.movieBucket.grantRead(getMovieContentUrl);
         props.movieBucket.grantRead(downloadMovie);
         props.movieBucket.grantRead(subscribeTopic);
         props.movieBucket.grantDelete(deleteMovie);
@@ -213,6 +221,7 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantRead(getAllMovies);
         props.movieBucket.grantRead(searchMovies);
         props.movieBucket.grantRead(getPersonalFeed);
+
         props.movieBucket.grantRead(getThumbnailUrl);
         props.movieBucket.grantPut(changeMovieData);
         props.movieBucket.grantDelete(changeMovieData);
@@ -261,6 +270,7 @@ export class InfrastructureStack extends cdk.Stack {
         const downloadIntegration = new HttpLambdaIntegration("DownloadMovie", downloadMovie);
         const preSignedUrlIntegration = new HttpLambdaIntegration("GetPostUrl", getPostUrl);
         const preSignedMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieUrl);
+        const getMovieUrlIntegration = new HttpLambdaIntegration("GetMovieUrl", getMovieContentUrl);
         const getMovieWatchIntegration = new HttpLambdaIntegration("GetMovie", getMovie);
         const changeMovieDataIntegration = new HttpLambdaIntegration(
             "ChangeMovieDate",
@@ -314,6 +324,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/getMovieUrl",
             methods: [apigatewayv2.HttpMethod.GET],
             integration: preSignedMovieUrlIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/getMovieContentUrl",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getMovieUrlIntegration,
             authorizer: httpAuthorizer,
         });
 
@@ -408,6 +424,7 @@ export class InfrastructureStack extends cdk.Stack {
         table.grantWriteData(this.uploadMovie);
         table.grantFullAccess(deleteMovie);
         table.grantFullAccess(getAllMovies);
+        table.grantReadData(getMovieContentUrl);
         table.grantReadData(calculateFeed);
         table.grantReadData(calculateFeedForMovie);
         table.grantStream(calculateFeedForMovie);
@@ -416,6 +433,7 @@ export class InfrastructureStack extends cdk.Stack {
         getAllMovies.addEnvironment("TABLE_NAME", table.tableName);
         deleteMovie.addEnvironment("TABLE_NAME", table.tableName);
         getPersonalFeed.addEnvironment("MOVIE_TABLE_NAME", table.tableName);
+        getMovieContentUrl.addEnvironment("TABLE_NAME", table.tableName);
         calculateFeed.addEnvironment("TABLE_NAME", table.tableName);
         calculateFeedForMovie.addEnvironment("TABLE_NAME",table.tableName);
 

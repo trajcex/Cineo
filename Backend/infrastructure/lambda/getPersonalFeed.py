@@ -29,6 +29,9 @@ def handler(event, context):
         for movie in movies:
             print(movie)
             item = next(filter(lambda x: x.get("id") == movie["movieID"], items), None)
+
+            if item == None: continue
+            
             movie_id = item['id']
             title = item['title']
             file_name = item['fileName']
