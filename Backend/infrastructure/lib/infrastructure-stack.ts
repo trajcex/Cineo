@@ -156,7 +156,14 @@ export class InfrastructureStack extends cdk.Stack {
             handler: "calculateFeedForMovie.handler",
             code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
             timeout: cdk.Duration.seconds(30),
+        });        
+        const getThumbnailUrl = new lambda.Function(this, "GetThumbnailUrl", {
+            runtime: lambda.Runtime.PYTHON_3_9,
+            handler: "getThumbnailUrl.handler",
+            code: lambda.Code.fromAsset(path.join(__dirname, "../lambda")),
+            timeout: cdk.Duration.seconds(30),
         });
+
         subscribeTopic.addToRolePolicy(
             new iam.PolicyStatement({
                 actions: ["sns:CreateTopic", "sns:ListTopics", "SNS:Subscribe"],
@@ -191,6 +198,8 @@ export class InfrastructureStack extends cdk.Stack {
         getAllMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         searchMovies.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
         getPersonalFeed.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        getThumbnailUrl.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
+        changeMovieData.addEnvironment("BUCKET_NAME", props.movieBucket.bucketName);
 
         props.movieBucket.grantPut(this.uploadMovie);
         props.movieBucket.grantPut(getPostUrl);
@@ -204,7 +213,11 @@ export class InfrastructureStack extends cdk.Stack {
         props.movieBucket.grantRead(getAllMovies);
         props.movieBucket.grantRead(searchMovies);
         props.movieBucket.grantRead(getPersonalFeed);
-
+        props.movieBucket.grantRead(getThumbnailUrl);
+        props.movieBucket.grantPut(changeMovieData);
+        props.movieBucket.grantDelete(changeMovieData);
+        props.movieBucket.grantRead(changeMovieData);
+        
         const authorizerLayer = new lambda.LayerVersion(this, "AuthorizerLayer", {
             code: lambda.Code.fromAsset(path.join(__dirname, "../layer", "authorizer.zip")),
             compatibleRuntimes: [lambda.Runtime.NODEJS_18_X],
@@ -257,6 +270,7 @@ export class InfrastructureStack extends cdk.Stack {
         const deleteMovieIntegration = new HttpLambdaIntegration("Delete", deleteMovie);
         const subscribeTopicIntegration = new HttpLambdaIntegration("Subscribe", subscribeTopic);
         const getAllMoviesIntegration = new HttpLambdaIntegration("GetAllMovies", getAllMovies);
+        const getThumbnailUrlIntegration = new HttpLambdaIntegration("GetThumbnailUrl", getThumbnailUrl);
         const likeMovieIntegration = new HttpLambdaIntegration("LikeMovie", likeMovie);
         const getLikeForMovieIntegration = new HttpLambdaIntegration(
             "GetLikeForMovie",
@@ -373,6 +387,12 @@ export class InfrastructureStack extends cdk.Stack {
             path: "/getPossibleSubcription",
             methods: [apigatewayv2.HttpMethod.GET],
             integration: getPossibleSubcriptionIntegration,
+            authorizer: httpAuthorizer,
+        });
+        this.api.addRoutes({
+            path: "/getThumbnailUrl",
+            methods: [apigatewayv2.HttpMethod.GET],
+            integration: getThumbnailUrlIntegration,
             authorizer: httpAuthorizer,
         });
         const table = new dynamodb.Table(this, "MoviesTable", {
