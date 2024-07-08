@@ -2,6 +2,11 @@ import boto3
 import os
 import json
 from datetime import datetime
+import base64
+import io
+import imghdr
+
+s3 = boto3.client('s3')
 
 def handler(event, context):
     try:
@@ -15,6 +20,38 @@ def handler(event, context):
         directors = parse_list_or_string(body.get('directors',[]))
         genres = parse_list_or_string(body.get('genres',[]))
         updatedAt = datetime.utcnow().isoformat()
+        thumbnail_base64 = body.get('thumbnailBase64', "")
+        file_name = body.get('fileName', "")
+
+        if thumbnail_base64:
+            s3_folder_path =  str(movie_id) + "-" +  f"{file_name}/"
+            new_s3_object_key_photo = s3_folder_path + "thumbnail."
+
+            old_image_key = get_old_image_key(movie_id, file_name)
+            if old_image_key:
+                old_image_data = s3.get_object(Bucket=os.environ['BUCKET_NAME'], Key=old_image_key)
+                old_image_format = get_image_format(old_image_data['Body'].read())
+
+                new_image_format = get_image_format(base64.b64decode(thumbnail_base64))
+
+                if old_image_format == new_image_format:
+                    s3.put_object(
+                        Bucket=os.environ['BUCKET_NAME'],
+                        Key=old_image_key,
+                        Body=base64.b64decode(thumbnail_base64)
+                    )
+                else:
+                    s3.delete_object(
+                        Bucket=os.environ['BUCKET_NAME'],
+                        Key=old_image_key
+                    )
+
+                    new_s3_object_key_photo += new_image_format
+                    s3.put_object(
+                        Bucket=os.environ['BUCKET_NAME'],
+                        Key=new_s3_object_key_photo,
+                        Body=base64.b64decode(thumbnail_base64)
+                    )
 
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(table_name)
@@ -42,3 +79,22 @@ def parse_list_or_string(value):
         return ', '.join(value)
     elif isinstance(value, str):
         return value
+
+def get_image_format(image_data):
+    image_stream = io.BytesIO(image_data)
+    image_format = imghdr.what(image_stream)
+    return str(image_format)
+
+def get_old_image_key(movie_id, file_name):
+    try:
+        response = s3.list_objects_v2(Bucket=os.environ['BUCKET_NAME'], Prefix=f"{movie_id}-{file_name}/thumbnail")
+        if 'Contents' in response:
+            for obj in response['Contents']:
+                image_data = s3.get_object(Bucket=os.environ['BUCKET_NAME'], Key=obj['Key'])
+                image_format = get_image_format(image_data['Body'].read())
+                if image_format:
+                    return obj['Key']
+    except Exception as e:
+        print(f"Error fetching old image key: {e}")
+    
+    return None
