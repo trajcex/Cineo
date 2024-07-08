@@ -149,7 +149,7 @@ export class ChangeMovieComponent {
     }
 
     // @ts-ignore
-    if (this.actors.length === 0 || this.directors.length === 0 || this.movieData.value.genres.length === 0 || this.receivedImageBase64 === '') {
+    if (this.actors.length === 0 || this.directors.length === 0 || this.movieData.value.genres.length === 0) {
       return;
     }
 
