@@ -7,7 +7,7 @@ def handler(event, context):
         group_params = {
             'UserPoolId': event['userPoolId'],
             'Username': event['userName'],
-            'GroupName': 'admin'
+            'GroupName': 'guest'
         }
         try:
             response = client.admin_add_user_to_group(**group_params)

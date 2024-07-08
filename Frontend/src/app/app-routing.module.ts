@@ -12,9 +12,9 @@ const routes: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
   {path : "home", component : AllMoviesComponent},
   {path : "add-movie", component : AddMovieComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
-  {path : "view-movie", component : ViewMovieComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
+  {path : "view-movie", component : ViewMovieComponent, canActivate: [AuthGuard], data: {role: ['guest', 'admin']}},
   {path : "change-movie", component : ChangeMovieComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
-  {path : "subscriptions", component : MySubscriptionsComponent, canActivate: [AuthGuard], data: {role: ['admin']}},
+  {path : "subscriptions", component : MySubscriptionsComponent, canActivate: [AuthGuard], data: {role: ['guest']}},
 ];
 
 @NgModule({

@@ -11,6 +11,8 @@ import { LambdaService } from 'src/app/service/lambda.service';
   styleUrls: ['./view-movie.component.css'],
 })
 export class ViewMovieComponent {
+
+  role: string = '';
   constructor(
     private lambdaService: LambdaService,
     private router: Router,
@@ -53,6 +55,8 @@ export class ViewMovieComponent {
   title: string = '';
   downloadUrl: string | undefined;
   ngOnInit(): void {
+    this.role = this.auth.getCurrentRole();
+    
     this.route.queryParams.subscribe((params) => {
       this.id = params['id'];
       this.fileName = params['fileName'];

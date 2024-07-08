@@ -40,7 +40,7 @@ def handler(event, context):
         for user_id in users:
             response = get_existing_item(user_id, feed_weights_table)
             if response and response != []:
-                value = {item['type']:item['weight'] for item in response}
+                value = {item['type'].replace(" ",""):item['weight'] for item in response}
                 ret = sum(value[i] if i in value else 0 for i in movie)
                 add_weight(user_id,movie_id,ret,feed_table)
 
