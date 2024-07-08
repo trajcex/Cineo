@@ -24,6 +24,7 @@ def handler(event, context):
         file_name = body.get('fileName', "")
 
         if thumbnail_base64:
+            thumbnail_data = base64.b64decode(thumbnail_base64)
             s3_folder_path =  str(movie_id) + "-" +  f"{file_name}/"
             new_s3_object_key_photo = s3_folder_path + "thumbnail."
 
