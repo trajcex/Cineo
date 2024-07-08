@@ -31,6 +31,7 @@ export class ViewMovieComponent {
       userID: this.auth.getUserID(),
       movieID: this.id,
       type: type,
+      genres: this.movie?.genres
     };
     this.element = element;
     this.fill = fill;
@@ -77,8 +78,9 @@ export class ViewMovieComponent {
   }
 
   onDownload(): void {
+    const genres = this.movie?.genres;
     this.lambdaService
-      .getMovieUrl(this.id, this.fileName, this.selectedResolution)
+      .getMovieUrl(this.id, this.fileName, this.selectedResolution, genres || [], this.auth.getUserID())
       .subscribe({
         next: (movie) => {
           console.log(movie.video_content);
